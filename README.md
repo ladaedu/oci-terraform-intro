@@ -261,6 +261,34 @@ Questions?
     ./tf-graph.sh
     ```
 
+## Initial tenancy setup
+
+For creating initial groups, policies, compartments, users, a custom module `compartment-group-policy` was created, which reuses
+standard OCI Terraform IAM modules - in `terraform-oci-iam` directory.
+
+To run these TF script, you must be an administrator (and source correct env-vars file). Steps:
+- create compartments, groups, policies:
+
+    ```
+    cd admin/groups
+    tf plan
+    tf apply
+    ```
+
+- create users - define correct variables first, then run terraform:
+
+    ```
+    cd admin/users
+    cat <<EOF > variables-users.tf
+    variable "student1_name" { default = "first1.last1@email.cz" }
+    variable "student2_name" { default = "first2.last2@email.cz" }
+    EOF
+    tf plan
+    tf apply
+    ```
+    - then "Create/Reset Password" must be done from console UI for each user
+
+
 ## References
 
 - Terraform:
@@ -271,4 +299,5 @@ Questions?
     - [Regions and Availability Domains](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/regions.htm)
     - [Regional Subnets](https://docs.cloud.oracle.com/iaas/releasenotes/changes/08c01d20-c829-47f2-8d54-9e9958f50ba8/)
     - [Overview of Load Balancing](https://docs.cloud.oracle.com/iaas/Content/Balance/Concepts/balanceoverview.htm)
+    - [OCI Terraform Modules for Identity and Access Management](https://registry.terraform.io/modules/oracle-terraform-modules/iam/oci/1.0.2)
 
