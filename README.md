@@ -202,9 +202,12 @@ Terratest will create its own environment, so destroy your environment first, to
     cd terratest
     go test -v -run TestTerraform
     ```
+
+
 ## Thank you
 
 Questions?
+
 
 # Backup slides
 
