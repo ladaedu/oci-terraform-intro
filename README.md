@@ -40,8 +40,11 @@ author: Vít Kotačka, Ladislav Dobiáš
 
 ## Prereqisities
 
+All commands expect Unix or Linux environment. They will probably not work on Windows.
+
 This you should have installed (can be in docker, too):
 
+- curl
 - git
 - openssl
 - terraform, e.g.:
@@ -51,14 +54,18 @@ This you should have installed (can be in docker, too):
     unzip terraform_0.11.14_linux_amd64.zip
     mv terraform ~/bin
     ```
-- go 1.11+
+- go 1.11+ (for terratest)
 
 Optional (recommended - for OCI API key setup,...):
 
 - oci cli - install OCI cli: [https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm)
+
     ```
     bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)"
     ```
+
+- jq (for json parsing)
+
 
 
 ## Setup OCI API key
@@ -66,7 +73,7 @@ Optional (recommended - for OCI API key setup,...):
 - 2 possibilities:
     - manual way:
         - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
-    - using OCI cli - generate OCI API key to ~/.oci:
+    - using OCI cli - generate OCI API key to `~/.oci`:
 
           ```
           oci setup config
@@ -76,12 +83,15 @@ Optional (recommended - for OCI API key setup,...):
               - user OCID - get it from UI console
               - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaag5ufgrzvunkiqspyc2ithwyyhlsl4ydvpiyj3zebc6mbn5kbs7oa`
               - region: `us-ashburn-1`
-        - simple tests:
+- add the key via console UI: your user -> API Keys -> Add Public Key
+  - paste the contents of `~/.oci/oci_api_key_public.pem` there and press Add
+- simple tests using oci cli:
 
-            ```
-            oci iam region list
-            oci compute image list --compartment-id ocid1.compartment.oc1..aaaaaaaamixpp5zksaik4p5e2itnzyfasnbhrnhb2zvim6vxy6kyfwbabkya
-            ```
+    ```
+    oci iam region list
+    oci compute image list --compartment-id ocid1.compartment.oc1..aaaaaaaamixpp5zksaik4p5e2itnzyfasnbhrnhb2zvim6vxy6kyfwbabkya
+    ```
+
 
 
 ## Today's Goals with Terraform - simple webserver with bastion
@@ -186,10 +196,38 @@ This would be achieved at the last step.
     ```
 - check what was created in UI console
 
+
+## Terraform - notes for step 7 - load balancer
+
+- to add more web server nodes, increase variable WebVMCount for 1 to e.g. 4 in file variables.tf
+- to add more bastion server nodes, increase variable BastionVMCount for 1 to e.g. 2 in file variables.tf
+- to test loadbalancer:
+    - from CLI:
+
+        ```
+        lb_address=$(tf output -json|jq -r .lb_ip.value[0])
+        echo $lb_address
+        curl http://$lb_address
+
+        # check that round-robin works:
+        for i in $(seq 10);do
+            curl -s http://$lb_address
+        done | grep name
+        ```
+
+- or get LB IP address from console UI (Networking/Load Balancers), and test it in browser - and reloads.
+
+
 ## Terratest
 
-Terratest will create its own environment, so destroy your environment first, to avoid problems with quota.
+In [terraform_oci_test.go](terratest/terraform_oci_test.go), there are 4 small tests:
 
+- ssh to bastion
+- ssh to webserver (via bastion)
+- check that webserver nginx port 80 is open using netstat
+- check that webserver nginx returns status 200
+
+Terratest will create its own environment, so destroy your environment first, to avoid problems with quota.
 - destroy the deployment:
 
     ```

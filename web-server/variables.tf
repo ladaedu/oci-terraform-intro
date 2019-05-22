@@ -21,6 +21,10 @@ variable "TestServerShape" {
 variable "InstanceImageOCID" {
   type = "map"
 
+  # TASK: add your image for your environment, get it e.g. using command:
+  #     oci compute image list --compartment-id "your compartment OCID" |less
+  # and search for image with name Linux-7.6-2019, like written below (with different date).
+  # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
     // Oracle-Linux-7.6-2019.02.20-0
     us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaacss7qgb6vhojblgcklnmcbchhei6wgqisqmdciu3l4spmroipghq"

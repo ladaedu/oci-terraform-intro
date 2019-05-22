@@ -23,9 +23,9 @@ resource "oci_core_instance" "WebServer" {
     source      = "userdata/hello-plain-text.conf"
     destination = "nginx-demo.conf"
     connection {
-#        bastion_host = "<Bastion.public_ip>"
-#        bastion_user = "opc"
-#        bastion_private_key = "${file("${var.ssh_private_key}")}"
+        bastion_host = "${oci_core_instance.Bastion.public_ip}"
+        bastion_user = "opc"
+        bastion_private_key = "${file("${var.ssh_private_key}")}"
         type = "ssh"
         host = "${self.private_ip}"
         user = "opc"
