@@ -1,0 +1,51 @@
+#!/bin/bash -x
+
+nginx_conf=/home/opc/nginx-demo.conf
+
+
+retry() {
+    local -r -i max_attempts="$1"; shift
+    local -r cmd="$@"
+    local -i attempt_num=1
+
+    until $cmd; do
+        if (( attempt_num == max_attempts ))
+        then
+            echo "Attempt $attempt_num failed and there are no more attempts left!" >&2
+            return 1
+        else
+            echo "Attempt $attempt_num failed! Trying again in $attempt_num seconds..." >&2
+            sleep $(( attempt_num++ ))
+        fi
+    done
+}
+
+
+echo '################### server userdata begins #####################'
+touch ~opc/userdata.`date +%s`.start
+
+echo '########## setup screen ###############'
+
+yum -y install screen
+grep -q '^defscrollback 102400' /etc/screenrc || sed -i -e 's/^\(defscrollback\).*/\1 102400/' /etc/screenrc
+
+echo '########## setup nginx ###############'
+
+yum -y install nginx
+# comment original OEL6 config:
+sed -i '/^ *server {/,+20s/^/#/' /etc/nginx/nginx.conf
+# wait until config is uploaded there, then do restart
+
+if retry 5 [ -f $nginx_conf ];then
+    cp $nginx_conf /etc/nginx/conf.d/
+fi
+
+systemctl enable nginx
+systemctl start nginx
+
+echo '########## open ports in firewall ###############'
+firewall-offline-cmd --add-port=80/tcp
+systemctl reload firewalld
+
+touch ~opc/userdata.`date +%s`.finish
+echo '################### BDSQL Control Plane server userdata ends #######################'

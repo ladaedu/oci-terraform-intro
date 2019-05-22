@@ -1,0 +1,44 @@
+Host bastion
+    Hostname 132.145.39.222
+    User opc
+    IdentityFile ~/.ssh/dalsi/bdacloudcli_rsa
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+Host web0
+    Hostname web0.private.demo.oraclevcn.com
+    User opc
+    IdentityFile ~/.ssh/dalsi/bdacloudcli_rsa
+    ProxyCommand ssh opc@bastion -W %h:%p
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+Host web1
+    Hostname web1.private.demo.oraclevcn.com
+    User opc
+    IdentityFile ~/.ssh/dalsi/bdacloudcli_rsa
+    ProxyCommand ssh opc@bastion -W %h:%p
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+Host web2
+    Hostname web2.private.demo.oraclevcn.com
+    User opc
+    IdentityFile ~/.ssh/dalsi/bdacloudcli_rsa
+    ProxyCommand ssh opc@bastion -W %h:%p
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+Host web3
+    Hostname web3.private.demo.oraclevcn.com
+    User opc
+    IdentityFile ~/.ssh/dalsi/bdacloudcli_rsa
+    ProxyCommand ssh opc@bastion -W %h:%p
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no

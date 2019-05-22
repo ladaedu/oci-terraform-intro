@@ -1,0 +1,146 @@
+/* Load Balancer */
+##########################################################################################
+## Variables
+##########################################################################################
+variable "load_balancer_shape" {
+  default = "100Mbps"
+}
+
+variable "LBCount" {
+  default = 2
+}
+
+variable "LBSubnetCIDR" {
+  default = "10.0.200.0/28"
+}
+
+##########################################################################################
+## Load Balancer resources: LB, LB Listener, LB Backendset, LB Backends
+##########################################################################################
+resource "oci_load_balancer" "lb-web" {
+  shape          = "${var.load_balancer_shape}"
+  compartment_id = "${var.CompartmentOCID}"
+  subnet_ids     = [ 
+       "${oci_core_subnet.LBSubnet.*.id}"
+  ]
+  display_name = "lb-web-${terraform.workspace}"
+  is_private = false
+}
+
+resource "oci_load_balancer_backend_set" "lb-backendset-web" {
+  name             = "lb-bes-web"
+  load_balancer_id = "${oci_load_balancer.lb-web.id}"
+  policy           = "ROUND_ROBIN"
+
+  health_checker {
+    port     = "80"
+    protocol = "HTTP"
+    return_code = "200"
+    url_path = "/controller/ping"
+    # default interval_ms = 30000 (30 s)
+    interval_ms = 5000
+    # default timeout_in_millis = 3000 (3 s)
+    timeout_in_millis = 2000
+    # default retries = 3
+    retries = 3
+  }
+
+  session_persistence_configuration {
+    cookie_name = "lb-web-session"
+    disable_fallback = true
+  }
+}
+
+resource "oci_load_balancer_listener" "lb-web-listener" {
+  load_balancer_id         = "${oci_load_balancer.lb-web.id}"
+  name                     = "http"
+  default_backend_set_name = "${oci_load_balancer_backend_set.lb-backendset-web.name}"
+  port                     = 80
+  protocol                 = "HTTP"
+  connection_configuration {
+    idle_timeout_in_seconds = "300"
+  }
+}
+
+resource "oci_load_balancer_path_route_set" "lb-web-routing" {
+    #Required
+    load_balancer_id = "${oci_load_balancer.lb-web.id}"
+    name = "lb-web-routing"
+    path_routes {
+        #Required
+        backend_set_name = "${oci_load_balancer_backend_set.lb-backendset-web.name}"
+        path = "/"
+        path_match_type {
+            #Required
+            match_type = "PREFIX_MATCH"
+        }
+
+    }
+}
+
+resource "oci_load_balancer_backend" "lb-backend-web" {
+  count            = "${var.WebVMCount}"
+  load_balancer_id = "${oci_load_balancer.lb-web.id}"
+  backendset_name  = "${oci_load_balancer_backend_set.lb-backendset-web.name}"
+  ip_address       = "${oci_core_instance.WebServer.*.private_ip[count.index]}"
+  port             = 80
+  backup           = false
+  drain            = false
+  offline          = false
+  weight           = 1
+}
+
+##########################################################################################
+## Network
+##########################################################################################
+resource "oci_core_security_list" "LBSubnetSeclist" {
+  compartment_id = "${var.CompartmentOCID}"
+  display_name   = "Loadbalancer Subnet Seclist-${terraform.workspace}"
+  vcn_id         = "${oci_core_virtual_network.VCN.id}"
+
+  egress_security_rules = [{
+    protocol    = "6"
+    destination = "0.0.0.0/0"
+  }]
+
+  ingress_security_rules = [
+  {
+    # http
+    tcp_options {
+      "max" = 80
+      "min" = 80
+    }
+    protocol = "6"
+    source   = "0.0.0.0/0"
+  },{
+    # https
+    tcp_options {
+      "max" = 443
+      "min" = 443
+    }
+    protocol = "6"
+    source   = "0.0.0.0/0"
+  }
+  ]
+}
+
+resource "oci_core_subnet" "LBSubnet" {
+  cidr_block          = "${var.LBSubnetCIDR}"
+  display_name        = "Loadbalancer Subnet-${terraform.workspace}"
+  dns_label           = "public"
+  compartment_id      = "${var.CompartmentOCID}"
+  vcn_id              = "${oci_core_virtual_network.VCN.id}"
+  route_table_id      = "${oci_core_route_table.PublicRoutingTable.id}"
+  security_list_ids   = ["${oci_core_security_list.LBSubnetSeclist.id}"]
+  dhcp_options_id     = "${oci_core_virtual_network.VCN.default_dhcp_options_id}"
+}
+
+##########################################################################################
+## Outputs
+##########################################################################################
+output "lb_ip" {
+  value = ["${oci_load_balancer.lb-web.ip_address_details.0.ip_address}"]
+}
+output "lb_is_public" {
+  value = ["${oci_load_balancer.lb-web.ip_address_details.0.is_public}"]
+}

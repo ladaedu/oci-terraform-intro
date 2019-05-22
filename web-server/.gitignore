@@ -1,0 +1,9 @@
+*.tfstate*
+*.env-vars
+*.terraform.tfvars
+.terraform/
+
+.idea
+*.swp
+tf-graph.dot*
+go.sum

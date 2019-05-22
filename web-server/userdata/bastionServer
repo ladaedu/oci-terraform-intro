@@ -1,0 +1,19 @@
+#!/bin/bash -x
+
+
+echo '################### client server userdata begins #####################'
+touch ~opc/userdata.`date +%s`.start
+
+EXTERNAL_IP=$(curl -s -m 10 http://whatismyip.akamai.com/)
+
+#echo '########## yum update all ###############'
+#firewall-offline-cmd --add-port=5601/tcp
+#firewall-offline-cmd --add-port=9200/tcp
+#firewall-offline-cmd --add-port=9300/tcp
+#systemctl reload firewalld
+
+
+
+
+touch ~opc/userdata.`date +%s`.finish
+echo '################### client server userdata ends #######################'
