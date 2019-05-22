@@ -67,7 +67,7 @@ Optional (recommended - for OCI API key setup,...):
     - manual way:
         - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
     - using OCI cli - generate OCI API key to ~/.oci:
-          
+
           ```
           oci setup config
           ```
@@ -76,12 +76,18 @@ Optional (recommended - for OCI API key setup,...):
               - user OCID - get it from UI console
               - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaag5ufgrzvunkiqspyc2ithwyyhlsl4ydvpiyj3zebc6mbn5kbs7oa`
               - region: `us-ashburn-1`
+        - simple tests:
 
- 
+            ```
+            oci iam region list
+            oci compute image list --compartment-id ocid1.compartment.oc1..aaaaaaaamixpp5zksaik4p5e2itnzyfasnbhrnhb2zvim6vxy6kyfwbabkya
+            ```
+
+
 ## Today's Goals with Terraform - simple webserver with bastion
 
 Deployment diagram - simple:
-![Simple web server](TF-simple.png)  
+![Simple web server](TF-simple.png)
 
 This would be achieved at the step #6.
 
@@ -97,7 +103,7 @@ This would be achieved at the last step.
 ## Terraform - setup
 
 - get sources:
-    
+
     ```
     git clone https://github.com/ladaedu/oci-terraform-intro
     cd oci-terraform-intro/web-server
@@ -109,6 +115,8 @@ This would be achieved at the last step.
     cp env-vars.example env-vars
     ```
 
+    - use data from `~/.oci/config`
+
 - source it:
 
     ```
@@ -118,7 +126,7 @@ This would be achieved at the last step.
 ## Terraform - first test
 
 - list current `*.tf` files:
-    
+
     ```
     ls *.tf
     ```

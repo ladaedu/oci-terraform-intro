@@ -78,16 +78,16 @@ module "group_student3" {
 #  user_ids              = [ "${module.student8.user_id}" ]
 #}
 #
-#module "group_student9" {
-#  source                  =  "../tfmodules/terraform-oci-iam/modules/iam-group"
-#  tenancy_ocid          = "${var.tenancy_ocid}"
-#  group_name            = "student9.grp"
-#  group_create          = false
-#  policy_create         = false
-#  user_count            = 1
-#  user_ids              = [ "${module.student9.user_id}" ]
-#}
-#
+module "group_student9" {
+  source                  =  "../tfmodules/terraform-oci-iam/modules/iam-group"
+  tenancy_ocid          = "${var.tenancy_ocid}"
+  group_name            = "student9.grp"
+  group_create          = false
+  policy_create         = false
+  user_count            = 1
+  user_ids              = [ "${module.student9.user_id}" ]
+}
+
 module "group_student10" {
   source                  =  "../tfmodules/terraform-oci-iam/modules/iam-group"
   tenancy_ocid          = "${var.tenancy_ocid}"
