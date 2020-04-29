@@ -3,18 +3,16 @@ variable "availability_domain" {
   default = 2
 }
 
-#variable "TestServerShape" {
-#  default = "VM.Standard1.1"
-#}
+//variable "TestServerShape" {
+//  default = "VM.Standard1.1"
+//}
 
 variable "InstanceImageOCID" {
   type = "map"
 
   default = {
-    // Oracle-Linux-7.6-2019.02.20-0
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaacss7qgb6vhojblgcklnmcbchhei6wgqisqmdciu3l4spmroipghq"
-    us-ashburn-1 = "ocid1.image.oc1.iad.aaaaaaaajnvrzitemn2k5gfkfq2hwfs4bid577u2jbrzla42wxo2qc77gwxa"
-    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaarruepdlahln5fah4lvm7tsf4was3wdx75vfs6vljdke65imbqnhq"
+    // Oracle-Linux-7.8-2020.04.17-0
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha"
   }
 }
 

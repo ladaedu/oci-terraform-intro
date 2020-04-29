@@ -21,7 +21,7 @@ author: Vít Kotačka, Ladislav Dobiáš
 ## Login to OCI console
 
 - OCI - Oracle Cloud Infrastructure
-- console URL: [https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu](https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu)
+- console URL: [https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu2020](https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu2020)
     - user: email
     - password: generated, need to be changed on first login
 
@@ -50,8 +50,8 @@ This you should have installed (can be in docker, too):
 - terraform, e.g.:
 
     ```
-    wget https://releases.hashicorp.com/terraform/0.11.14/terraform_0.11.14_linux_amd64.zip
-    unzip terraform_0.11.14_linux_amd64.zip
+    wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
+    unzip terraform_0.12.24_linux_amd64.zip
     mv terraform ~/bin
     ```
 - go 1.11+ (for terratest)
@@ -61,7 +61,7 @@ Optional (recommended - for OCI API key setup,...):
 - oci cli - install OCI cli: [https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm)
 
     ```
-    bash -c "$(curl -L https://raw.githubusercontent.com/oracle/oci-cli/master/scripts/install/install.sh)"
+    sudo pip3 install oci-cli
     ```
 
 - jq (for json parsing)
@@ -71,38 +71,46 @@ Optional (recommended - for OCI API key setup,...):
 ## Setup OCI API key
 
 - 2 possibilities:
-    - manual way:
-        - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
     - using OCI cli - generate OCI API key to `~/.oci`:
 
-          ```
-          oci setup config
-          ```
+        ```
+        oci setup config
+        ```
 
-          - provide:
-              - user OCID - get it from UI console
-              - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaag5ufgrzvunkiqspyc2ithwyyhlsl4ydvpiyj3zebc6mbn5kbs7oa`
-              - region: `us-ashburn-1`
+        - provide:
+            - user OCID - get it from UI console
+            - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda`
+            - region: `eu-frankfurt-1`
+    - manual way:
+        - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
 - add the key via console UI: your user -> API Keys -> Add Public Key
   - paste the contents of `~/.oci/oci_api_key_public.pem` there and press Add
 - simple tests using oci cli:
 
     ```
     oci iam region list
-    oci compute image list --compartment-id ocid1.compartment.oc1..aaaaaaaamixpp5zksaik4p5e2itnzyfasnbhrnhb2zvim6vxy6kyfwbabkya
+    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda
     ```
 
+- example of using jq:
 
+    ```
+    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda \
+      | jq -r '.data[]|"\(.id) \(."display-name")"'
+    ```
 
-## Today's Goals with Terraform - simple webserver with bastion
+## Goals with Terraform - simple webserver with bastion
 
 Deployment diagram - simple:
 ![Simple web server](TF-simple.png)
 
 This would be achieved at the step #6.
 
+*Note*: there are some "mistakes" included in several steps. Find them and fix them.
 
-## Today's Goals with Terraform - more webservers with bastion and load balancer
+
+
+## Goals with Terraform - more webservers with bastion and load balancer
 
 Deployment diagram - with LB:
 ![Web server with LB](TF-loadbalancer.png)
