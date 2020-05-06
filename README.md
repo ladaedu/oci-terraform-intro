@@ -308,10 +308,12 @@ To run these TF script, you must be an administrator (and source correct env-var
 - Terraform:
     - download: [https://www.terraform.io/downloads.html](https://www.terraform.io/downloads.html)
     - OCI provider docs: [https://www.terraform.io/docs/providers/oci/](https://www.terraform.io/docs/providers/oci/)
+    - OCI provider sources and examples:  [https://github.com/terraform-providers/terraform-provider-oci](https://github.com/terraform-providers/terraform-provider-oci)
 - OCI:
     - [Overview of Networking](https://docs.cloud.oracle.com/iaas/Content/Network/Concepts/overview.htm)
     - [Regions and Availability Domains](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/regions.htm)
     - [Regional Subnets](https://docs.cloud.oracle.com/iaas/releasenotes/changes/08c01d20-c829-47f2-8d54-9e9958f50ba8/)
     - [Overview of Load Balancing](https://docs.cloud.oracle.com/iaas/Content/Balance/Concepts/balanceoverview.htm)
     - [OCI Terraform Modules for Identity and Access Management](https://registry.terraform.io/modules/oracle-terraform-modules/iam/oci/1.0.2)
+    - OCI CLI sources: [https://github.com/oracle/oci-cli](https://github.com/oracle/oci-cli)
 
