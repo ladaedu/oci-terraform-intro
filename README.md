@@ -21,7 +21,7 @@ author: Vít Kotačka, Ladislav Dobiáš
 ## Login to OCI console
 
 - OCI - Oracle Cloud Infrastructure
-- console URL: [https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu2020](https://console.us-ashburn-1.oraclecloud.com/?tenant=czechedu2020)
+- console URL: [https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2020](https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2020)
     - user: email
     - password: generated, need to be changed on first login
 
@@ -57,6 +57,12 @@ This you should have installed (can be in docker, too):
 - go 1.11+ (for terratest)
 
 Optional (recommended - for OCI API key setup,...):
+
+- python3
+
+    ```
+    sudo yum install python3
+    ```
 
 - oci cli - install OCI cli: [https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm](https://docs.cloud.oracle.com/iaas/Content/API/SDKDocs/cliinstall.htm)
 
@@ -95,7 +101,7 @@ Optional (recommended - for OCI API key setup,...):
 - example of using jq:
 
     ```
-    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda \
+    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda --all \
       | jq -r '.data[]|"\(.id) \(."display-name")"'
     ```
 
