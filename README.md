@@ -274,6 +274,8 @@ Questions?
     ```
     ./tf-graph.sh
     ```
+Graph of dependencies of resources, variables, outputs:
+![TF Dependencies graph example](tf-graph.png)
 
 ## Initial tenancy setup
 
