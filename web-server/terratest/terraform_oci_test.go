@@ -1,10 +1,13 @@
 package terratest
 
 import (
+	"context"
 	"fmt"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/oracle/oci-go-sdk/common"
+	"github.com/oracle/oci-go-sdk/core"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -65,6 +68,7 @@ func runSubtests(t *testing.T) {
 	t.Run("sshWeb", sshWeb)
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
+	t.Run("checkVpn", checkVpn)
 }
 
 func sshBastion(t *testing.T) {
@@ -81,6 +85,45 @@ func netstatNginx(t *testing.T) {
 
 func curlWebServer(t *testing.T) {
 	curlService(t, "nginx", "", "80", "200")
+}
+
+func checkVpn(t *testing.T) {
+	// client
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+
+	// request
+	request := core.GetVcnRequest{}
+	vcnId := sanitizedVcnId(t)
+	request.VcnId = &vcnId
+
+	// response
+	response, err := c.GetVcn(context.Background(), request)
+
+	if err != nil {
+		t.Fatalf("error in calling vcn: %s", err.Error())
+	}
+
+	// assertions
+	expected := "Web VCN-default"
+	actual := response.Vcn.DisplayName
+
+	if expected != *actual {
+		t.Fatalf("wrong vcn display name: expected %q, got %q", expected, *actual)
+	}
+
+	expected = "10.0.0.0/16"
+	actual = response.Vcn.CidrBlock
+
+	if expected != *actual {
+		t.Fatalf("wrong cidr block: expected %q, got %q", expected, *actual)
+	}
+}
+
+func sanitizedVcnId(t *testing.T) string {
+	raw := terraform.Output(t, options, "VcnID")
+	return strings.Split(raw, "\"")[1]
 }
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
