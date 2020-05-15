@@ -1,0 +1,16 @@
+export TF_VAR_region="eu-frankfurt-1"
+export PS1='\u@\h \w [terraform web-server $TF_VAR_region]\$ '
+### Authentication details
+# top admin:
+export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda"
+export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaanlrm3ogbjraszgokixkm336qnriv7hgqswaglosx3cgh4eu5m5ia"
+export TF_VAR_fingerprint="9e:d8:e3:e9:33:88:c1:c2:02:75:5c:ec:90:c2:f1:11"
+export TF_VAR_private_key_path="/home/kowalsky/.oci/oci_api_key.pem"
+export TF_VAR_CompartmentOCID="ocid1.compartment.oc1..aaaaaaaaodw2iegjoeaswjzpwwwyxdnocbaqfcr2zitaie74uscwkjd4liga"
+
+#export TF_VAR_availability_domain=1
+export TF_VAR_TestServerShape="VM.Standard2.1"
+
+### Public/private keys used on the instance
+export TF_VAR_ssh_public_key=/home/kowalsky/.oci/access_key.pub
+export TF_VAR_ssh_private_key=/home/kowalsky/.oci/access_key
