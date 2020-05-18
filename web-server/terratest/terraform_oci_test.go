@@ -1,11 +1,13 @@
 package terratest
 
 import (
+	"context"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/oci"
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/oracle/oci-go-sdk/common"
+	"github.com/oracle/oci-go-sdk/core"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -38,9 +40,9 @@ func terraformEnvOptions() *terraform.Options {
 			"CompartmentOCID":  os.Getenv("TF_VAR_CompartmentOCID"),
 			"fingerprint":      os.Getenv("TF_VAR_fingerprint"),
 			"private_key_path": os.Getenv("TF_VAR_private_key_path"),
-			"pass_phrase":      oci.GetPassPhraseFromEnvVar(),
-			"ssh_public_key":   os.Getenv("TF_VAR_ssh_public_key"),
-			"ssh_private_key":  os.Getenv("TF_VAR_ssh_private_key"),
+			// "pass_phrase":      oci.GetPassPhraseFromEnvVar(),
+			"ssh_public_key":  os.Getenv("TF_VAR_ssh_public_key"),
+			"ssh_private_key": os.Getenv("TF_VAR_ssh_private_key"),
 		},
 	}
 }
@@ -49,7 +51,7 @@ func TestTerraform(t *testing.T) {
 	options = terraformEnvOptions()
 
 	defer terraform.Destroy(t, options)
-	terraform.WorkspaceSelectOrNew(t, options, "terratest-vita")
+	// terraform.WorkspaceSelectOrNew(t, options, "terratest-vita")
 	terraform.InitAndApply(t, options)
 
 	runSubtests(t)
@@ -66,6 +68,7 @@ func runSubtests(t *testing.T) {
 	t.Run("sshWeb", sshWeb)
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
+	t.Run("checkVpn", checkVpn)
 }
 
 func sshBastion(t *testing.T) {
@@ -82,6 +85,45 @@ func netstatNginx(t *testing.T) {
 
 func curlWebServer(t *testing.T) {
 	curlService(t, "nginx", "", "80", "200")
+}
+
+func checkVpn(t *testing.T) {
+	// client
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+
+	// request
+	request := core.GetVcnRequest{}
+	vcnId := sanitizedVcnId(t)
+	request.VcnId = &vcnId
+
+	// response
+	response, err := c.GetVcn(context.Background(), request)
+
+	if err != nil {
+		t.Fatalf("error in calling vcn: %s", err.Error())
+	}
+
+	// assertions
+	expected := "Web VCN-default"
+	actual := response.Vcn.DisplayName
+
+	if expected != *actual {
+		t.Fatalf("wrong vcn display name: expected %q, got %q", expected, *actual)
+	}
+
+	expected = "10.0.0.0/16"
+	actual = response.Vcn.CidrBlock
+
+	if expected != *actual {
+		t.Fatalf("wrong cidr block: expected %q, got %q", expected, *actual)
+	}
+}
+
+func sanitizedVcnId(t *testing.T) string {
+	raw := terraform.Output(t, options, "VcnID")
+	return strings.Split(raw, "\"")[1]
 }
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
@@ -109,7 +151,9 @@ func curlService(t *testing.T, serviceName string, path string, port string, ret
 	webIPs := webServerIPs(t)
 
 	for _, cp := range webIPs {
-		command := curl(cp, port, path)
+		re := strings.NewReplacer("[", "", "]", "")
+		host := re.Replace(cp)
+		command := curl(host, port, path)
 		description := fmt.Sprintf("curl to %s on %s:%s%s", serviceName, cp, port, path)
 
 		out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {

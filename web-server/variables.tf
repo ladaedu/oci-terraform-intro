@@ -1,9 +1,20 @@
-variable "tenancy_ocid" {}
-variable "user_ocid" {}
-variable "fingerprint" {}
-variable "private_key_path" {}
-variable "ssh_public_key" {}
-variable "ssh_private_key" {}
+variable "tenancy_ocid" {
+}
+
+variable "user_ocid" {
+}
+
+variable "fingerprint" {
+}
+
+variable "private_key_path" {
+}
+
+variable "ssh_public_key" {
+}
+
+variable "ssh_private_key" {
+}
 
 variable "region" {
   default = "u-frankfurt-1"
@@ -19,7 +30,7 @@ variable "TestServerShape" {
 }
 
 variable "InstanceImageOCID" {
-  type = map
+  type = map(string)
 
   # TASK: add your image for your environment, get it e.g. using command:
   #     oci compute image list --compartment-id "your compartment OCID" |less
@@ -43,9 +54,11 @@ variable "BastionServerBootStrap" {
 variable "WebVMCount" {
   default = 1
 }
+
 variable "BastionVMCount" {
   default = 1
 }
+
 ####################################################################################################
 variable "VCNCIDR" {
   default = "10.0.0.0/16"
@@ -57,9 +70,10 @@ variable "PrivateSubnetCIDR" {
 
 variable "BastionSubnetCIDRs" {
   # same count as ADs in region
-  default = [ "10.0.100.0/28", "10.0.100.16/28", "10.0.100.32/28" ]
+  default = ["10.0.100.0/28", "10.0.100.16/28", "10.0.100.32/28"]
 }
 
 variable "CompartmentOCID" {
   default = "ocid1.compartment.oc1..aaaaaaaa5ho3ftokbmcdpn34mxhjcmuear2tnwyx54sxy6qpcqtaiwqucqlq"
 }
+

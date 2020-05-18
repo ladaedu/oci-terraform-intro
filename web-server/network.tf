@@ -16,3 +16,4 @@ resource "oci_core_nat_gateway" "NATGateway" {
   vcn_id         = oci_core_vcn.VCN.id
   display_name   = "NAT Gateway-${terraform.workspace}"
 }
+

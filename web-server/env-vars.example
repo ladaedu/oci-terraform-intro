@@ -2,30 +2,21 @@ export TF_VAR_region="eu-frankfurt-1"
 export PS1='\u@\h \w [terraform web-server $TF_VAR_region]\$ '
 ### Authentication details
 # top admin:
-export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaazo7h6yqgac7aunojr2tjsxux3ipdyamc3fgkvz7lubvdtsjyf4gq"
-export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaa63yhfj473ump4j2oglkggrlgctin4dh7q23kyira2xlbcngivy7a"
-export TF_VAR_fingerprint="76:b0:e8:a7:82:0b:0f:69:18:91:a4:c1:c7:a5:90:8c"
-export TF_VAR_private_key_path="/home/xdobiasl/.oci-oraclebigdatadb/oci_api_key.pem"
+export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda"
+export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaaranz2i2o7g5vzdfdmhc73l4shsmiezib3f7d7khdjzwjermylonq"
+export TF_VAR_fingerprint="a3:0c:69:fa:5e:ad:fd:20:b2:d3:ef:f2:e0:63:9f:60"
+export TF_VAR_private_key_path="/home/dobias/.oci/oci_api_key.pem"
 
 #export TF_VAR_availability_domain=1
 export TF_VAR_TestServerShape="VM.Standard2.1"
 
-#export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
-#                                  uk-london-1 = \"ocid1.image.oc1.uk-london-1.aaaaaaaaynxdelzap4cpziba7ahd2jbfdf5ss4r4wjmqefm6wwftrmn25vbq\"}"
-
-export TF_VAR_CompartmentOCID="ocid1.compartment.oc1..aaaaaaaa5ho3ftokbmcdpn34mxhjcmuear2tnwyx54sxy6qpcqtaiwqucqlq"
+export TF_VAR_CompartmentOCID="ocid1.compartment.oc1..aaaaaaaar5sra7w3prqo3wvyyedho7vl3mpgmh4jbzstl5mykempn4jqkjuq"
 
 ### Public/private keys used on the instance
-export TF_VAR_ssh_public_key=/home/xdobiasl/.ssh/dalsi/bdacloudcli_rsa.pub
-export TF_VAR_ssh_private_key=/home/xdobiasl/.ssh/dalsi/bdacloudcli_rsa
-
-#export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda"
-#export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaaewxiej7asst4p7ljvxb5jsf2is2tmluysedn4of6kw6ptzbdpdma"
-#export TF_VAR_fingerprint="5c:42:e9:9d:e9:d8:6d:12:20:94:be:1f:d2:51:59:09"
-#export TF_VAR_private_key_path="/home/xdobiasl/.oci/czechedu2020-oci_api_key.pem"
-
+export TF_VAR_ssh_public_key=/home/dobias/.ssh/id_rsa.pub
+export TF_VAR_ssh_private_key=/home/dobias/.ssh/id_rsa
 
 #export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
 #                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
-#                                  \"}"
+#                                  }"
 
