@@ -20,3 +20,6 @@ output "BastionPublicIP" {
   value = [oci_core_instance.Bastion.*.public_ip]
 }
 
+output "VCNID" {
+  value = [oci_core_vcn.VCN.id]
+}

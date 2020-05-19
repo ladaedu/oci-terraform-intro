@@ -10,6 +10,7 @@ import (
 	"github.com/oracle/oci-go-sdk/core"
 	"io/ioutil"
 	"os"
+  "os/exec"
 	"strconv"
 	"strings"
 	"testing"
@@ -68,15 +69,25 @@ func runSubtests(t *testing.T) {
 	t.Run("sshWeb", sshWeb)
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
-	t.Run("checkVpn", checkVpn)
+	t.Run("checkVCN", checkVCN)
+  t.Run("webLoadbalancer", webLoadbalancer)
 }
 
 func sshBastion(t *testing.T) {
-	ssh.CheckSshConnection(t, bastionHost(t))
+  hosts := bastionHost(t)
+  for i := 0; i < len(hosts); i++ {
+    ssh.CheckSshConnection(t, hosts[i])
+  }
 }
 
 func sshWeb(t *testing.T) {
-	jumpSsh(t, "whoami", sshUserName, false)
+  bastion_hosts := bastionHost(t)
+  web_hosts := webHost(t)
+  for bi := 0; bi < len(bastion_hosts); bi++ {
+    for wi := 0; wi < len(web_hosts); wi++ {
+      jumpSsh(t, "whoami", sshUserName, false, bastion_hosts[bi], web_hosts[wi])
+    }
+  }
 }
 
 func netstatNginx(t *testing.T) {
@@ -87,7 +98,7 @@ func curlWebServer(t *testing.T) {
 	curlService(t, "nginx", "", "80", "200")
 }
 
-func checkVpn(t *testing.T) {
+func checkVCN(t *testing.T) {
 	// client
 	config := common.CustomProfileConfigProvider("", "CzechEdu")
 	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
@@ -106,10 +117,10 @@ func checkVpn(t *testing.T) {
 	}
 
 	// assertions
-	expected := "Web VCN-default"
+	expected := "Web VCN"
 	actual := response.Vcn.DisplayName
 
-	if expected != *actual {
+	if !strings.HasPrefix(*actual, expected) {
 		t.Fatalf("wrong vcn display name: expected %q, got %q", expected, *actual)
 	}
 
@@ -122,20 +133,48 @@ func checkVpn(t *testing.T) {
 }
 
 func sanitizedVcnId(t *testing.T) string {
-	raw := terraform.Output(t, options, "VcnID")
+	raw := terraform.Output(t, options, "VCNID")
 	return strings.Split(raw, "\"")[1]
+}
+
+func webLoadbalancer(t *testing.T) {
+  loadbalancer_ip := terraform.OutputList(t, options, "lb_ip")[0]
+  // curl -s -o /dev/null http://132.145.229.197:80/
+  command := exec.Command("curl", loadbalancer_ip)
+  out, err := command.Output()
+  
+  if err != nil {
+    t.Fatal("Error during curl:", err)
+  }
+  
+  expected := time.Now().Format("02/Jan/2006")
+  if !strings.Contains(string(out), expected) {
+    t.Fatal("Unexpected answer from load balancer", string(out))
+  }
 }
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
 
-func bastionHost(t *testing.T) ssh.Host {
+func bastionHost(t *testing.T) []ssh.Host {
 	bastionIP := terraform.OutputList(t, options, "BastionPublicIP")[0]
-	return sshHost(t, bastionIP)
+	bastionIP_trim := strings.Trim(bastionIP, "[]")
+  bastionIP_split := strings.Split(bastionIP_trim, " ")
+  sshHosts := make([]ssh.Host, len(bastionIP_split))
+  for i := 0; i < len(bastionIP_split); i++ {
+    sshHosts[i] = sshHost(t, bastionIP_split[i])
+  }
+  return sshHosts
 }
 
-func webHost(t *testing.T) ssh.Host {
+func webHost(t *testing.T) []ssh.Host {
 	webIP := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
-	return sshHost(t, webIP)
+	webIP_trim := strings.Trim(webIP, "[]")
+  webIP_split := strings.Split(webIP_trim, " ")
+  sshHosts := make([]ssh.Host, len(webIP_split))
+  for i := 0; i < len(webIP_split); i++ {
+    sshHosts[i] = sshHost(t, webIP_split[i])
+  }
+  return sshHosts
 }
 
 func sshHost(t *testing.T, ip string) ssh.Host {
@@ -147,10 +186,11 @@ func sshHost(t *testing.T, ip string) ssh.Host {
 }
 
 func curlService(t *testing.T, serviceName string, path string, port string, returnCode string) {
-	bastionHost := bastionHost(t)
-	webIPs := webServerIPs(t)
+	bastionHost := bastionHost(t)[0]
+	webHosts := webHost(t)
 
-	for _, cp := range webIPs {
+	for _, h := range webHosts {
+    cp := h.Hostname
 		re := strings.NewReplacer("[", "", "]", "")
 		host := re.Replace(cp)
 		command := curl(host, port, path)
@@ -180,9 +220,7 @@ func webServerIPs(t *testing.T) []string {
 	return terraform.OutputList(t, options, "WebServerPrivateIPs")
 }
 
-func jumpSsh(t *testing.T, command string, expected string, retryAssert bool) string {
-	bastionHost := bastionHost(t)
-	webHost := webHost(t)
+func jumpSsh(t *testing.T, command string, expected string, retryAssert bool, bastionHost ssh.Host, webHost ssh.Host) string {
 	description := fmt.Sprintf("ssh jump to %q with command %q", webHost.Hostname, command)
 
 	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
@@ -225,6 +263,8 @@ func loadKeyPair(t *testing.T) *ssh.KeyPair {
 }
 
 func netstatService(t *testing.T, service string, port string, expectedCount int) {
+  bastion_hosts := bastionHost(t)
+  web_hosts := webHost(t)
 	command := fmt.Sprintf("sudo netstat -tnlp | grep '%s' | grep ':%s' | wc -l", service, port)
-	jumpSsh(t, command, strconv.Itoa(expectedCount), true)
+	jumpSsh(t, command, strconv.Itoa(expectedCount), true, bastion_hosts[0], web_hosts[0])
 }
