@@ -76,5 +76,5 @@ variable "BastionSubnetCIDRs" {
 }
 
 variable "CompartmentOCID" {
-  default = "ocid1.compartment.oc1..aaaaaaaa5ho3ftokbmcdpn34mxhjcmuear2tnwyx54sxy6qpcqtaiwqucqlq"
+  default = "ocid1.compartment.oc1..aaaaaaaa35ijrtxa6g4x7oun5olcst6ubexkzmi2qgmnoriu2aku6xo5khqq"
 }

@@ -71,6 +71,43 @@ func runSubtests(t *testing.T) {
 	t.Run("checkVcn", checkVcn)
   t.Run("checkBastionShape", checkBastionShape)
   t.Run("checkComputeNames", checkComputeNames)
+  t.Run("checkRoundRobin", checkRoundRobin)
+}
+
+func callLoadBalancer(t *testing.T) string {
+  bastionHost := bastionHost(t)
+  lb_ip := terraform.OutputList(t, options, "lb_ip")[0]
+
+  command := fmt.Sprintf("curl -s http://%s | grep 'name'", lb_ip)
+  description := "load balancer call"
+
+  out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+    out, err := ssh.CheckSshCommandE(t, bastionHost, command)
+    if err != nil {
+      return "", err
+    }
+
+    out = strings.TrimSpace(out)
+    return out, nil
+  })
+
+  out = strings.Split(out, " ")[2]
+  return out
+}
+
+func checkRoundRobin(t *testing.T) {
+  encountered_servers := map[string]struct{}{}
+  computeIds := sanitizedInstanceIds(t, "ComputeInstanceIds");
+  for i := 0; i < len(computeIds); i++ {
+    current_instance := callLoadBalancer(t)
+    _, err := encountered_servers[current_instance]
+
+    if err {
+      t.Fatalf("%s instance was repeated, load balancer does not use round robin", current_instance)
+    }
+
+    encountered_servers[current_instance] = struct{}{}
+  }
 }
 
 func sshBastion(t *testing.T) {
