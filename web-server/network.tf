@@ -7,7 +7,7 @@ resource "oci_core_virtual_network" "VCN" {
 
 resource "oci_core_internet_gateway" "InetGW" {
   compartment_id = var.CompartmentOCID
-  display_name   = "Internet GW -${terraform.workspace}"
+  display_name   = "Internet GW-${terraform.workspace}"
   vcn_id         = oci_core_virtual_network.VCN.id
 }
 
@@ -16,4 +16,3 @@ resource "oci_core_nat_gateway" "NATGateway" {
   vcn_id         = oci_core_virtual_network.VCN.id
   display_name   = "NAT Gateway-${terraform.workspace}"
 }
-

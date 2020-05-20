@@ -2,7 +2,7 @@
 // running in Public subnet
 // accessible with ssh
 resource "oci_core_instance" "Bastion" {
-  count               = "1"
+  count               = var.BastionVMCount
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index % 2]["name"]
   compartment_id      = var.CompartmentOCID
   display_name        = "bastion${count.index}-${terraform.workspace}"
@@ -21,4 +21,3 @@ resource "oci_core_instance" "Bastion" {
     user_data           = base64encode(file(var.BastionServerBootStrap))
   }
 }
-

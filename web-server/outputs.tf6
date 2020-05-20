@@ -8,6 +8,14 @@ output "WebServerPrivateIPs" {
 #  value = ["${oci_core_instance.WebServer.*.public_ip}"]
 #}
 
+output "BastionInstanceIds" {
+  value = [oci_core_instance.Bastion.*.id]
+}
+
+output "ComputeInstanceIds" {
+  value = [oci_core_instance.WebServer.*.id]
+}
+
 output "WebServerHostNames" {
   value = [oci_core_instance.WebServer.*.hostname_label]
 }
@@ -22,4 +30,12 @@ output "BastionPublicIP" {
 
 output "VcnID" {
   value = [oci_core_virtual_network.VCN.id]
+}
+
+output "PrivateSubnetId" {
+  value = [oci_core_subnet.PrivateSubnet.id]
+}
+
+output "WebServerDisplayNames" {
+  value = [oci_core_instance.WebServer.*.display_name]
 }
