@@ -68,8 +68,7 @@ func runSubtests(t *testing.T) {
 	t.Run("sshWeb", sshWeb)
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
-	// TODO Vita: rename to checkVcn
-	t.Run("checkVpn", checkVpn)
+	t.Run("checkVcn", checkVcn)
 }
 
 func sshBastion(t *testing.T) {
@@ -88,7 +87,7 @@ func curlWebServer(t *testing.T) {
 	curlService(t, "nginx", "", "80", "200")
 }
 
-func checkVpn(t *testing.T) {
+func checkVcn(t *testing.T) {
 	// client
 	config := common.CustomProfileConfigProvider("", "CzechEdu")
 	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
