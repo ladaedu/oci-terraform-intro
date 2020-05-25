@@ -17,7 +17,7 @@ variable "ssh_private_key" {
 }
 
 variable "region" {
-  default = "us-phoenix-1"
+  default = "eu-frankfurt-1"
 }
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
@@ -32,12 +32,13 @@ variable "TestServerShape" {
 variable "InstanceImageOCID" {
   type = map(string)
 
-  # TASK: add your image for your environment, get it e.g. using command:
+  # TASK: add your image for your environment, get it e.g. using command: 
   #     oci compute image list --compartment-id "your compartment OCID" |less
   # and search for image with name Linux-7.6-2019, like written below (with different date).
   # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
     // Oracle-Linux-7.6-2019.02.20-0
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha"
     us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaacss7qgb6vhojblgcklnmcbchhei6wgqisqmdciu3l4spmroipghq"
     uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaarruepdlahln5fah4lvm7tsf4was3wdx75vfs6vljdke65imbqnhq"
   }
