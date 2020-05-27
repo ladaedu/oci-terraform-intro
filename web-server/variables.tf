@@ -17,7 +17,7 @@ variable "ssh_private_key" {
 }
 
 variable "region" {
-  default = "us-phoenix-1"
+  default = "eu-frankfurt-1"
 }
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
