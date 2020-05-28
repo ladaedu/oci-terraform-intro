@@ -70,6 +70,7 @@ func runSubtests(t *testing.T) {
 	t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
 	t.Run("checkSubnet", checkSubnet)
+	t.Run("chedkBastionShape", checkBastionShape)
 }
 
 func sshBastion(t *testing.T) {
@@ -167,7 +168,45 @@ func checkSubnet(t *testing.T) {
 	}
 }
 
+func sanitizedBastionId(t *testing.T) string {
+	raw := terraform.Output(t, options, "BastionId")
+	return strings.Split(raw, "\"")[1]
+}
 
+func checkBastionShape(t *testing.T) {
+	
+	// client
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	c, _ := core.NewComputeClientWithConfigurationProvider(config)
+	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+
+	// request
+	request := core.GetInstanceRequest{}
+	id := sanitizedBastionId(t)
+	request.InstanceId = &id
+
+	// response
+	response, err := c.GetInstance(context.Background(), request)
+
+	if err != nil {
+		t.Fatalf("error in calling vcn: %s", err.Error())
+	}
+
+	// assertions
+	expected := "VM.Standard2.1"
+	actual := response.Instance.Shape
+
+	if expected != *actual {
+		t.Fatalf("wrong vcn display name: expected %q, got %q", expected, *actual)
+	}
+
+	expected = "eu-frankfurt-1"
+	actual = response.Instance.Region
+
+	if expected != *actual {
+		t.Fatalf("wrong region: expected %q, got %q", expected, *actual)
+	}
+}
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
 

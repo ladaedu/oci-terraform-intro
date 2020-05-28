@@ -27,3 +27,7 @@ output "VcnID" {
 output "SubnetId" {
   value = [oci_core_subnet.PrivateSubnet.id]
 }
+
+output "BastionId" {
+  value = [oci_core_instance.Bastion.*.id]
+}
