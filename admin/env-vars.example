@@ -1,16 +1,18 @@
-export PS1='\u@\h \w [terraform czechedu lada]\$ '
+export PS1='\u@\h \w [terraform czechedu2021 lada]\$ '
 ### Authentication details
 # top admin:
 
-export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda"
-export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaaewxiej7asst4p7ljvxb5jsf2is2tmluysedn4of6kw6ptzbdpdma"
-export TF_VAR_fingerprint="5c:42:e9:9d:e9:d8:6d:12:20:94:be:1f:d2:51:59:09"
-export TF_VAR_private_key_path="/home/xdobiasl/.oci/czechedu2020-oci_api_key.pem"
+export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a"
+export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaazcbkuldypegvpvkkqgm6kieyl5b37kfewfnf5p2ru5pewqizuwgq"
+export TF_VAR_fingerprint="fb:39:e2:77:9c:2a:d9:45:ab:92:c3:0c:6f:a0:56:0f"
+export TF_VAR_private_key_path="/home/xdobiasl/.oci/czechedu2021-oci_api_key.pem"
 
 export TF_VAR_region="eu-frankfurt-1"
 export TF_VAR_home_region="eu-frankfurt-1"
 #export TF_VAR_availability_domain=1
 export TF_VAR_TestServerShape="VM.Standard2.1"
+# this is used just for email suggestion:
+export TF_VAR_tenancy_name="czechedu2021"
 
 #export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
 #                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 

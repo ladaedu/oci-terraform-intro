@@ -6,3 +6,5 @@ variable "home_region" {}
 variable "compartment_create" {
   default = true
 }
+# Used for email suggestion
+variable "tenancy_name" {}

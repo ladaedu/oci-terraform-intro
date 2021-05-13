@@ -1,6 +1,7 @@
 *.tfstate*
 env-vars
 *.terraform.tfvars
+.terraform.lock.hcl
 .terraform/
 
 .idea

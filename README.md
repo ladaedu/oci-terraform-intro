@@ -21,7 +21,7 @@ author: Vít Kotačka, Ladislav Dobiáš
 ## Login to OCI console
 
 - OCI - Oracle Cloud Infrastructure
-- console URL: [https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2020](https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2020)
+- console URL: [https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2021](https://console.eu-frankfurt-1.oraclecloud.com/?tenant=czechedu2021)
     - user: email
     - password: generated, need to be changed on first login
 
@@ -50,11 +50,11 @@ This you should have installed (can be in docker, too):
 - terraform, e.g.:
 
     ```
-    wget https://releases.hashicorp.com/terraform/0.12.24/terraform_0.12.24_linux_amd64.zip
-    unzip terraform_0.12.24_linux_amd64.zip
+    wget https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
+    unzip terraform_0.15.3_linux_amd64.zip
     mv terraform ~/bin
     ```
-- go 1.11+ (for terratest)
+- go 1.14+ (for terratest)
 
 Optional (recommended - for OCI API key setup,...):
 
@@ -76,7 +76,8 @@ Optional (recommended - for OCI API key setup,...):
 
 ## Setup OCI API key
 
-- 2 possibilities:
+- 3 possibilities:
+    - just download it from your profile in OCI Console
     - using OCI cli - generate OCI API key to `~/.oci`:
 
         ```
@@ -85,7 +86,7 @@ Optional (recommended - for OCI API key setup,...):
 
         - provide:
             - user OCID - get it from UI console
-            - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda`
+            - tenancy OCI (also from UI): `ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a`
             - region: `eu-frankfurt-1`
     - manual way:
         - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
@@ -95,13 +96,13 @@ Optional (recommended - for OCI API key setup,...):
 
     ```
     oci iam region list
-    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda
+    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a
     ```
 
 - example of using jq:
 
     ```
-    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda --all \
+    oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a --all \
       | jq -r '.data[]|"\(.id) \(."display-name")"'
     ```
 
@@ -133,7 +134,7 @@ This would be achieved at the last step.
     cd oci-terraform-intro/web-server
     ```
 
-- edit variables in env-vars.example that are not commented out, copy it first:
+- edit variables in env-vars.example that are not commented out, copy it first (env-vars is in .git-ignore):
 
     ```
     cp env-vars.example env-vars
@@ -287,6 +288,7 @@ To run these TF script, you must be an administrator (and source correct env-var
 
     ```
     cd admin/groups
+    tf init
     tf plan
     tf apply
     ```
@@ -299,6 +301,7 @@ To run these TF script, you must be an administrator (and source correct env-var
     variable "student1_name" { default = "first1.last1@email.cz" }
     variable "student2_name" { default = "first2.last2@email.cz" }
     EOF
+    tf init
     tf plan
     tf apply
     ```
@@ -314,6 +317,7 @@ To run these TF script, you must be an administrator (and source correct env-var
 - OCI:
     - [Overview of Networking](https://docs.cloud.oracle.com/iaas/Content/Network/Concepts/overview.htm)
     - [Regions and Availability Domains](https://docs.cloud.oracle.com/iaas/Content/General/Concepts/regions.htm)
+    - [list of regions](https://github.com/oracle/oci-python-sdk/blob/master/src/oci/regions.py#L89-L118) in OCI Python SDK (the line numbers can differ in future)
     - [Regional Subnets](https://docs.cloud.oracle.com/iaas/releasenotes/changes/08c01d20-c829-47f2-8d54-9e9958f50ba8/)
     - [Overview of Load Balancing](https://docs.cloud.oracle.com/iaas/Content/Balance/Concepts/balanceoverview.htm)
     - [OCI Terraform Modules for Identity and Access Management](https://registry.terraform.io/modules/oracle-terraform-modules/iam/oci/1.0.2)
