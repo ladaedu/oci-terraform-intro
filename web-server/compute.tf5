@@ -3,10 +3,9 @@ resource "oci_core_instance" "WebServer" {
   availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index % 3]["name"]
 
   ## If there are more instances than fault domains, terraform does automatic modulo
-  #fault_domain        = "${lookup(data.oci_identity_fault_domains.FDs.fault_domains[count.index],"name")}"
+  #fault_domain        = lookup(data.oci_identity_fault_domains.FDs.fault_domains[count.index],"name")
   compartment_id = var.CompartmentOCID
   display_name   = "webServer${count.index}-${terraform.workspace}"
-  hostname_label = "web${count.index}"
 
   source_details {
     source_type = "image"
@@ -14,7 +13,11 @@ resource "oci_core_instance" "WebServer" {
   }
 
   shape     = var.TestServerShape
-  subnet_id = oci_core_subnet.PrivateSubnet.id
+  create_vnic_details {
+    hostname_label = "web${count.index}"
+    subnet_id = oci_core_subnet.PrivateSubnet.id
+    assign_public_ip = false
+  }
 
   metadata = {
     ssh_authorized_keys = file(var.ssh_public_key)

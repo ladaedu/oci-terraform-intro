@@ -34,8 +34,8 @@ author: Vít Kotačka, Ladislav Dobiáš
 
 - quota:
     - important:
-        - virtual machine shapes: 3x 15 VM.Standard2.1 (1 in each AD)
-        - loadbalancers: 15 in region
+        - virtual machine shapes: 3x 15 VM.Standard2.1 (1 in each AD), few others, too.
+        - loadbalancers: 15 in region (maybe less)
 
 
 ## Prereqisities
@@ -53,8 +53,16 @@ This you should have installed (can be in docker, too):
     wget https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
     unzip terraform_0.15.3_linux_amd64.zip
     mv terraform ~/bin
+    ln -s terraform ~/bin/tf
     ```
-- go 1.14+ (for terratest)
+
+- go 1.14+ (for terratest), e.g.:
+
+    ```
+    wget https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
+    rm -rf /usr/local/go && tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+    ln -s ../go/bin/go /usr/local/bin
+    ```
 
 Optional (recommended - for OCI API key setup,...):
 
@@ -76,8 +84,10 @@ Optional (recommended - for OCI API key setup,...):
 
 ## Setup OCI API key
 
-- 3 possibilities:
-    - just download it from your profile in OCI Console
+For remote access to OCI, e.g. by OCI-CLI or other OCI SDKs, we need to have some access key, or token.
+
+There are 3 possibilities:
+    - just download the key from your profile in OCI Console, and cut&paste proper content to `~/.oci/config` to make OCI-CLI work
     - using OCI cli - generate OCI API key to `~/.oci`:
 
         ```
@@ -90,7 +100,7 @@ Optional (recommended - for OCI API key setup,...):
             - region: `eu-frankfurt-1`
     - manual way:
         - see [https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm](https://docs.cloud.oracle.com/iaas/Content/API/Concepts/apisigningkey.htm)
-- add the key via console UI: your user -> API Keys -> Add Public Key
+- add the key via console UI: your user -> API Keys -> Add Public Key (it is already done if you used the 1st way above)
   - paste the contents of `~/.oci/oci_api_key_public.pem` there and press Add
 - simple tests using oci cli:
 
@@ -99,7 +109,7 @@ Optional (recommended - for OCI API key setup,...):
     oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a
     ```
 
-- example of using jq:
+- example of using jq (useful to get list of available images):
 
     ```
     oci compute image list --compartment-id ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a --all \
@@ -140,7 +150,7 @@ This would be achieved at the last step.
     cp env-vars.example env-vars
     ```
 
-    - use data from `~/.oci/config`
+    - use data from `~/.oci/config` (this can be get also from OCI console in API Keys section under user profile)
 
 - source it:
 
@@ -212,10 +222,46 @@ This would be achieved at the last step.
 - check what was created in UI console
 
 
+## Terraform - notes for step 6 - Test ssh to Web Server (optional)
+
+Get from terraform output:
+- bastion public IP
+- web-server private IP
+
+Test ssh - to connect directly via bastion, add similar lines to `~/.ssh/config`, replace Hostname/Username/:
+```
+Host web-server
+    Hostname 10.0.0.231
+    User opc
+    IdentityFile ~/.ssh/id_rsa
+    ProxyCommand ssh bastion -W %h:%p
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+Host bastion
+    Hostname 130.61.47.195
+    User opc
+    IdentityFile ~/.ssh/id_rsa
+    ServerAliveInterval 50
+    UserKnownHostsFile /dev/null
+    StrictHostKeyChecking no
+    GSSAPIAuthentication no
+```
+Run ssh:
+```
+ssh web-server
+```
+Inside the web-server, try access web server:
+```
+curl localhost
+```
+
 ## Terraform - notes for step 7 - load balancer
 
+- first try setup with default values (1 web-server, 1 bastion)
 - to add more web server nodes, increase variable WebVMCount for 1 to e.g. 4 in file variables.tf
-- to add more bastion server nodes, increase variable BastionVMCount for 1 to e.g. 2 in file variables.tf
+- to add more bastion server nodes, increase variable BastionVMCount for 1 to e.g. 2 in file variables.tf (if you enter more, 2 will be used)
 - to test loadbalancer:
     - from CLI:
 
@@ -230,7 +276,7 @@ This would be achieved at the last step.
         done | grep name
         ```
 
-- or get LB IP address from console UI (Networking/Load Balancers), and test it in browser - and reloads.
+- or get LB IP address from console UI (Networking/Load Balancers), and test it in browser - and reload the page several time so you can see that web servers are changed in round-robin fashion.
 
 
 ## Terratest

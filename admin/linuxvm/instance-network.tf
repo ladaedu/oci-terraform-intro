@@ -9,10 +9,10 @@ resource "oci_core_route_table" "PublicRoutingTable" {
   }
 }
 
-# Bastion SecList - Public Internet
-resource "oci_core_security_list" "BastionSubnetSeclist" {
+# LinuxVM SecList - Public Internet
+resource "oci_core_security_list" "LinuxVMSubnetSeclist" {
   compartment_id = var.CompartmentOCID
-  display_name   = "Bastion Subnet Seclist-${terraform.workspace}"
+  display_name   = "LinuxVM Subnet Seclist-${terraform.workspace}"
   vcn_id         = oci_core_virtual_network.VCN.id
 
   egress_security_rules {
@@ -32,16 +32,14 @@ resource "oci_core_security_list" "BastionSubnetSeclist" {
   }
 }
 
-resource "oci_core_subnet" "BastionSubnet" {
-  count               = min(var.BastionVMCount, 2)
-  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index]["name"]
-  cidr_block          = var.BastionSubnetCIDRs[count.index]
-  display_name        = "Bastion Subnet-${count.index}-${terraform.workspace}"
-  dns_label           = "bastion${count.index}"
+resource "oci_core_subnet" "LinuxVMSubnet" {
+  cidr_block          = var.LinuxVMSubnetCIDR
+  display_name        = "LinuxVM Subnet-${terraform.workspace}"
+  dns_label           = "vm"
   compartment_id      = var.CompartmentOCID
   vcn_id              = oci_core_virtual_network.VCN.id
   route_table_id      = oci_core_route_table.PublicRoutingTable.id
-  security_list_ids   = [oci_core_security_list.BastionSubnetSeclist.id]
+  security_list_ids   = [oci_core_security_list.LinuxVMSubnetSeclist.id]
   dhcp_options_id     = oci_core_virtual_network.VCN.default_dhcp_options_id
 }
 

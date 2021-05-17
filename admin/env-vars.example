@@ -13,10 +13,12 @@ export TF_VAR_home_region="eu-frankfurt-1"
 export TF_VAR_TestServerShape="VM.Standard2.1"
 # this is used just for email suggestion:
 export TF_VAR_tenancy_name="czechedu2021"
+# used for LinuxVM:
+export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaa3sbcplfwq3y6vjsyszbxskpf6x3vxmsatasachrbau52pkmsz5wq                                             
 
-#export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
-#                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
-#                                  \"}"
+export TF_VAR_InstanceImageOCID="{us-phoenix-1   = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
+                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
+                                 }"
 
 
 ### Public/private keys used on the instance

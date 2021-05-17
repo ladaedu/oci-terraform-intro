@@ -1,0 +1,58 @@
+#!/bin/bash -x
+
+# This script will be run as root user on the provisioned VM.
+# Maximum size is 16kB (when base64 encoded).
+
+create_user () {
+    user=$1
+    useradd -m "$user"
+    su - "$user" -c 'ssh-keygen -t rsa -P "" -f $HOME/.ssh/id_rsa;umask 0022;touch $HOME/.ssh/authorized_keys'
+}
+
+retry() {
+    local -r -i max_attempts="$1"; shift
+    local -r cmd="$@"
+    local -i attempt_num=1
+
+    until $cmd; do
+        if (( attempt_num == max_attempts ))
+        then
+            echo "Attempt $attempt_num failed and there are no more attempts left!" >&2
+            return 1
+        else
+            echo "Attempt $attempt_num failed! Trying again in $attempt_num seconds..." >&2
+            sleep $(( attempt_num++ ))
+        fi
+    done
+}
+
+echo '################### web server userdata begins #####################'
+touch ~opc/userdata.`date -Is`.start
+
+echo '########## install packages ###############'
+yum -y install git graphviz jq mc python3 screen 
+grep -q '^defscrollback 102400' /etc/screenrc || sed -i -e 's/^\(defscrollback\).*/\1 102400/' /etc/screenrc
+
+echo '########## install python packages ###############'
+pip3 install oci-cli
+
+echo '########## install terraform ###############'
+wget https://releases.hashicorp.com/terraform/0.15.3/terraform_0.15.3_linux_amd64.zip
+unzip terraform_0.15.3_linux_amd64.zip
+chmod +x terraform
+mv terraform /usr/local/bin
+ln -s terraform /usr/local/bin/tf
+
+echo '########## install go ###############'
+wget https://golang.org/dl/go1.16.4.linux-amd64.tar.gz
+rm -rf /usr/local/go && tar -C /usr/local -xzf go1.16.4.linux-amd64.tar.gz
+ln -s ../go/bin/go /usr/local/bin
+
+echo '########## create users ###############'
+create_user student
+for i in student{1..10};do
+    create_user $i
+done
+
+echo '################### web server userdata ends #######################'
+touch ~opc/userdata.`date -Is`.finish
