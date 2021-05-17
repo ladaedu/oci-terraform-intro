@@ -1,16 +1,15 @@
-export TF_VAR_region="eu-frankfurt-1"
+export TF_VAR_region=eu-frankfurt-1
 export PS1='\u@\h \w [terraform web-server $TF_VAR_region]\$ '
 ### Authentication details
-# top admin:
-export TF_VAR_tenancy_ocid="ocid1.tenancy.oc1..aaaaaaaagpl3dtrsgsdrpjmtkffgtywh3gcesjyk4psebzssdlngpyg3luda"
-export TF_VAR_user_ocid="ocid1.user.oc1..aaaaaaaaranz2i2o7g5vzdfdmhc73l4shsmiezib3f7d7khdjzwjermylonq"
-export TF_VAR_fingerprint="a3:0c:69:fa:5e:ad:fd:20:b2:d3:ef:f2:e0:63:9f:60"
-export TF_VAR_private_key_path="/home/dobias/.oci/oci_api_key.pem"
+export TF_VAR_tenancy_ocid=ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a
+export TF_VAR_user_ocid=ocid1.user.oc1..aaaaaaaaycpmanax7emnx3lglmsjcvepnriybhloczkcthkaabjqkscsjmca
+export TF_VAR_fingerprint=aa:3f:89:06:31:fd:9d:d1:e0:ca:8f:6e:08:96:18:fc
+export TF_VAR_private_key_path=student-05-13-22-03.pem
 
 #export TF_VAR_availability_domain=1
 export TF_VAR_TestServerShape="VM.Standard2.1"
 
-export TF_VAR_CompartmentOCID="ocid1.compartment.oc1..aaaaaaaar5sra7w3prqo3wvyyedho7vl3mpgmh4jbzstl5mykempn4jqkjuq"
+export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaa3sbcplfwq3y6vjsyszbxskpf6x3vxmsatasachrbau52pkmsz5wq
 
 ### Public/private keys used on the instance
 export TF_VAR_ssh_public_key=/home/dobias/.ssh/id_rsa.pub

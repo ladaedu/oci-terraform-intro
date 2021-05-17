@@ -1,7 +1,21 @@
-output "user_id" {
-  value = "${var.user_create ? element(concat(oci_identity_user.this.*.id, list("")), 0) : lookup(local.user_ids[0], "id") }"
+// Copyright (c) 2018, 2021, Oracle and/or its affiliates.
+
+output "name_ocid" {
+  value       = zipmap(oci_identity_user.this[*].name, oci_identity_user.this[*].id)
+  description = "list of username and associated OCID"
 }
 
-output "user_name" {
-  value = "${var.user_name}"
+output "names" {
+  value       = oci_identity_user.this[*].name
+  description = "list of usernames"
+}
+
+output "user_description" {
+  value       = oci_identity_user.this[*].description
+  description = "list of users descriptions"
+}
+
+output "user_id" {
+  value       = oci_identity_user.this[*].id
+  description = "list of users OCID"
 }

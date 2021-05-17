@@ -32,7 +32,7 @@ variable "TestServerShape" {
 variable "InstanceImageOCID" {
   type = map(string)
 
-  # TASK: add your image for your environment, get it e.g. using command:
+  # TASK: set machine image for your environment, get it e.g. using command:
   #     oci compute image list --compartment-id "your compartment OCID" |less
   # and search for image with name Linux-7.6-2019, like written below (with different date).
   # TIP: the variable map can be (re-)defined also in env-vars file.
