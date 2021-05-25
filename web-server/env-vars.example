@@ -12,8 +12,8 @@ export TF_VAR_TestServerShape="VM.Standard2.1"
 export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaa3sbcplfwq3y6vjsyszbxskpf6x3vxmsatasachrbau52pkmsz5wq
 
 ### Public/private keys used on the instance
-export TF_VAR_ssh_public_key=/home/dobias/.ssh/id_rsa.pub
-export TF_VAR_ssh_private_key=/home/dobias/.ssh/id_rsa
+export TF_VAR_ssh_public_key=/home/jirka/.ssh/id_rsa.pub
+export TF_VAR_ssh_private_key=/home/jirka/.ssh/id_rsa
 
 #export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
 #                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
