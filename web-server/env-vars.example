@@ -19,3 +19,5 @@ export TF_VAR_ssh_private_key=/home/jirka/.ssh/id_rsa
 #                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
 #                                  }"
 
+alias tf=terraform
+tf init
