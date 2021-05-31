@@ -1,13 +1,17 @@
 variable "tenancy_ocid" {
+  default = "ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a"
 }
 
 variable "user_ocid" {
+  default = "ocid1.user.oc1..aaaaaaaawcnv6rupe65khoaixjfozzazx45v74z7piphbley4ogfdsikntgq"
 }
 
 variable "fingerprint" {
+  default = "af:08:97:b1:11:d2:b1:96:79:fa:e7:19:d9:1e:c0:2c"
 }
 
 variable "private_key_path" {
+  default = "/home/jirka/Downloads/jiriklepl-05-18-14-32.pem"
 }
 
 variable "ssh_public_key" {
@@ -17,13 +21,13 @@ variable "ssh_private_key" {
 }
 
 variable "region" {
-  default = "us-phoenix-1"
+  default = "eu-frankfurt-1"
 }
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
-#variable "availability_domain" {
-#  default = 1
-#}
+variable "availability_domain" {
+  default = 1
+}
 
 variable "TestServerShape" {
   default = "VM.Standard2.1"
@@ -32,14 +36,8 @@ variable "TestServerShape" {
 variable "InstanceImageOCID" {
   type = map(string)
 
-  # TASK: set machine image for your environment, get it e.g. using command:
-  #     oci compute image list --compartment-id "your compartment OCID" |less
-  # and search for image with name Linux-7.6-2019, like written below (with different date).
-  # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
-    // Oracle-Linux-7.6-2019.02.20-0
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaacss7qgb6vhojblgcklnmcbchhei6wgqisqmdciu3l4spmroipghq"
-    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaarruepdlahln5fah4lvm7tsf4was3wdx75vfs6vljdke65imbqnhq"
+    us-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaa4pnql6wprjir2xhf2is2r7u2g7e4s3lufxxjp6hzm3tyepannwra"
   }
 }
 
@@ -75,6 +73,6 @@ variable "BastionSubnetCIDRs" {
 }
 
 variable "CompartmentOCID" {
-  default = "ocid1.compartment.oc1..aaaaaaaa5ho3ftokbmcdpn34mxhjcmuear2tnwyx54sxy6qpcqtaiwqucqlq"
+  default = "ocid1.compartment.oc1..aaaaaaaazdyl6y7calgvq3nkugyfxqhayq5y2fxmet7rhwzpucpekj3dwx7a"
 }
 
