@@ -1,6 +1,6 @@
 #!/bin/bash -e
 
-mydir=$(dirname $0)
+mydir=$(dirname "$0")
 
 # This script will run apply, and then will update ~/.ssh/config for Hosts bastion-cluster and bastion-service
 # Configure these 5 variables to suit your needs:
@@ -16,7 +16,7 @@ alias tf=terraform
 tf workspace select "$workspace"
 time tf apply -auto-approve
 tf_out=$(tf output --json)
-bastion_ip=$(echo $tf_out|jq -r '.BastionPublicIP.value[0]')
+bastion_ip=$(echo "$tf_out" | jq -r '.BastionPublicIP.value[0]' | grep -o "[0-9]\+\.[0-9]\+\.[0-9]\+\.[0-9]\+")
 awk -i inplace -v INPLACE_SUFFIX=.bak "
     /^Host / {x=0} 
     /^Host $bastion_host_in_config\$/ {x=\"bastion\"} 
