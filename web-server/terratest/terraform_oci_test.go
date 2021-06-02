@@ -71,6 +71,8 @@ func runSubtests(t *testing.T) {
 	t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
 	t.Run("checkLoadBalancer", checkLoadBalancer)
+	t.Run("checkWebServerShape", checkWebServerShape)
+	t.Run("checkBastionSubnet", checkBastionSubnet)
 }
 
 func sshBastion(t *testing.T) {
@@ -173,20 +175,122 @@ func checkLoadBalancer(t *testing.T) {
 	}
 }
 
+func checkWebServerShape(t *testing.T) {
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	c, err := core.NewComputeClientWithConfigurationProvider(config)
+
+	if err != nil {
+		t.Fatalf("error in creating client: %s", err.Error())
+	}
+
+	webIDs := getOutputList(t, "WebServerIDs")
+	for _, id := range webIDs {
+		request := core.GetInstanceRequest{}
+		fmt.Printf("WebID: %s\n", id)
+		request.InstanceId = &id
+
+		response, err := c.GetInstance(context.Background(), request)
+		if err != nil {
+			t.Fatalf("error in calling instance: %s", err.Error())
+		}
+
+		expected := "VM.Standard2.1"
+		actual := response.Instance.Shape
+
+		if expected != *actual {
+			t.Fatalf("wrong VM shape: expected %q, got %q", expected, *actual)
+		}
+
+		expected = "eu-frankfurt-1"
+		actual = response.Instance.Region
+
+		if (expected != *actual) {
+			t.Fatalf("wrong VM region: expected %q, got %q", expected, *actual)
+		}
+	}
+}
+
+func checkBastionSubnet(t *testing.T) {
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	c, err := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+
+	if err != nil {
+		t.Fatalf("error in creating client: %s", err.Error())
+	}
+
+	bastionSubnetIDs := getOutputList(t, "BastionSubnetIDs")
+	for _, id := range bastionSubnetIDs {
+		request := core.GetSubnetRequest{}
+		fmt.Printf("Subnet ID: %s\n", id)
+		request.SubnetId = &id
+
+		response, err := c.GetSubnet(context.Background(), request)
+		if err != nil {
+			t.Fatalf("error in calling subnet %q: %s", id, err.Error())
+		}
+
+		// check CIDR blocks
+		expected := []string{"10.0.100.0/28", "10.0.100.16/28", "10.0.100.32/28"}
+		actual := response.Subnet.CidrBlock
+
+		if !contains(expected, *actual) {
+			t.Fatalf("wrong subnet block: expected one of %v, got %q", expected, *actual)
+		}
+
+		// check ingress list
+		secListIds := response.Subnet.SecurityListIds
+		if len(secListIds) == 0 {
+			t.Fatalf("subnet %q has no security lists attached", id)
+		}
+
+		for _, sId := range secListIds {
+			request2 := core.GetSecurityListRequest{}
+			request2.SecurityListId = &sId
+
+			response2, err2 := c.GetSecurityList(context.Background(), request2)
+			if err2 != nil {
+				t.Fatalf("error in calling security list: %s", err.Error())
+			}
+
+			ingressRules := response2.SecurityList.IngressSecurityRules
+			if len(ingressRules) == 0 {
+				t.Fatalf("security list %q has no ingress rules", sId)
+			}
+
+			for _, rule := range ingressRules {
+				// only TCP traffic allowed
+				if *rule.Protocol != "6" {
+					t.Fatalf("wrong protocol version: expected %q, got %q", "6", *rule.Protocol)
+				}
+
+				if rule.TcpOptions == nil {
+					t.Fatalf("ingress rule has no TCP options")
+				}
+
+				tcpOpts := *rule.TcpOptions
+				if tcpOpts.DestinationPortRange == nil {
+					t.Fatalf("ingress rule has no destination port range")
+				}
+
+				portRange := *tcpOpts.DestinationPortRange
+
+				// only SSH allowed
+				if portRange.Max == nil || portRange.Min == nil {
+					t.Fatalf("a source range bound is unset")
+				}
+				if *portRange.Max != 22 || *portRange.Min != 22 {
+					t.Fatalf("wrong source port range: expected %d-%d, got %d-%d", 22, 22, *portRange.Max, *portRange.Min)
+				}
+			}
+		}
+	}
+}
+
 func sanitizedVcnId(t *testing.T) string {
 	return terraform.OutputList(t, options, "VcnID")[0]
 }
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
-
-func getOutput(t *testing.T, field string, index int) string {
-	list := terraform.OutputList(t, options, field)[0]
-	if (list[0] == `[`[0]) {
-		list := strings.Trim(strings.Trim(list, "["), "]")
-		return strings.Split(list, " ")[index]
-	}
-	return list
-}
 
 func getOutputList(t *testing.T, field string) []string {
 	list := terraform.OutputList(t, options, field)[0]
