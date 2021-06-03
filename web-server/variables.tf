@@ -51,11 +51,11 @@ variable "BastionServerBootStrap" {
 }
 
 variable "WebVMCount" {
-  default = 1
+  default = 3
 }
 
 variable "BastionVMCount" {
-  default = 1
+  default = 2
 }
 
 ####################################################################################################

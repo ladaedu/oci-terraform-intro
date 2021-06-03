@@ -3,17 +3,18 @@ package terratest
 import (
 	"context"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/gruntwork-io/terratest/modules/ssh"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/oracle/oci-go-sdk/common"
-	"github.com/oracle/oci-go-sdk/core"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/oracle/oci-go-sdk/common"
+	"github.com/oracle/oci-go-sdk/core"
 )
 
 const (
@@ -52,9 +53,10 @@ func TestTerraform(t *testing.T) {
 
 	defer terraform.Destroy(t, options)
 	// terraform.WorkspaceSelectOrNew(t, options, "terratest-vita")
-	terraform.InitAndApply(t, options)
-
-	runSubtests(t)
+	{
+		terraform.InitAndApply(t, options)
+		runSubtests(t)
+	}
 }
 
 func TestWithoutProvisioning(t *testing.T) {
@@ -64,10 +66,10 @@ func TestWithoutProvisioning(t *testing.T) {
 }
 
 func runSubtests(t *testing.T) {
-	t.Run("sshBastion", sshBastion)
-	t.Run("sshWeb", sshWeb)
-	t.Run("netstatNginx", netstatNginx)
-	t.Run("curlWebServer", curlWebServer)
+	// t.Run("sshBastion", sshBastion)
+	// t.Run("sshWeb", sshWeb)
+	// t.Run("netstatNginx", netstatNginx)
+	// t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
 }
 
@@ -92,6 +94,7 @@ func checkVpn(t *testing.T) {
 	config := common.CustomProfileConfigProvider("", "CzechEdu")
 	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
 	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	c.UserAgent = "terratest"
 
 	// request
 	request := core.GetVcnRequest{}
