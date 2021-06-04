@@ -91,9 +91,9 @@ func curlWebServer(t *testing.T) {
 
 func checkVpn(t *testing.T) {
 	// client
-	config := common.CustomProfileConfigProvider("", "CzechEdu")
-	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
-	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	// config := common.CustomProfileConfigProvider("", "CzechEdu")
+	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
 	c.UserAgent = "terratest"
 
 	// request
