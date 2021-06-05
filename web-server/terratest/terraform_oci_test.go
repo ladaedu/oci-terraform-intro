@@ -64,10 +64,10 @@ func TestWithoutProvisioning(t *testing.T) {
 }
 
 func runSubtests(t *testing.T) {
-	t.Run("sshBastion", sshBastion)
-	t.Run("sshWeb", sshWeb)
-	t.Run("netstatNginx", netstatNginx)
-	t.Run("curlWebServer", curlWebServer)
+	// t.Run("sshBastion", sshBastion)
+	// t.Run("sshWeb", sshWeb)
+	// t.Run("netstatNginx", netstatNginx)
+	// t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
 }
 
@@ -89,9 +89,9 @@ func curlWebServer(t *testing.T) {
 
 func checkVpn(t *testing.T) {
 	// client
-	config := common.CustomProfileConfigProvider("", "CzechEdu")
-	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
-	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	// config := common.CustomProfileConfigProvider("", "CzechEdu")
+	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
 
 	// request
 	request := core.GetVcnRequest{}
