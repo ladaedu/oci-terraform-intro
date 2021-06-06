@@ -19,9 +19,11 @@ import (
 
 const (
 	// OCI params
-	sshUserName = "opc"
-	nginxName   = "nginx"
-	nginxPort   = "80"
+	sshUserName    = "opc"
+	nginxName      = "nginx"
+	nginxPort      = "80"
+	webServerCount = 3
+	bastionCount   = 2
 	// Terratest retries
 	maxRetries          = 20
 	sleepBetweenRetries = 5 * time.Second
@@ -51,12 +53,11 @@ func terraformEnvOptions() *terraform.Options {
 func TestTerraform(t *testing.T) {
 	options = terraformEnvOptions()
 
-	defer terraform.Destroy(t, options)
 	// terraform.WorkspaceSelectOrNew(t, options, "terratest-vita")
-	{
-		terraform.InitAndApply(t, options)
-		runSubtests(t)
-	}
+
+	terraform.InitAndApply(t, options)
+	runSubtests(t)
+	defer terraform.Destroy(t, options)
 }
 
 func TestWithoutProvisioning(t *testing.T) {
@@ -66,19 +67,25 @@ func TestWithoutProvisioning(t *testing.T) {
 }
 
 func runSubtests(t *testing.T) {
-	// t.Run("sshBastion", sshBastion)
-	// t.Run("sshWeb", sshWeb)
-	// t.Run("netstatNginx", netstatNginx)
-	// t.Run("curlWebServer", curlWebServer)
+	t.Run("sshBastion", sshBastion)       // rewritten to check all bastions
+	t.Run("sshWeb", sshWeb)               // rewritten to check all web servers
+	t.Run("netstatNginx", netstatNginx)   // rewritten to send the command to all web servers
+	t.Run("curlWebServer", curlWebServer) // rewritten to check all web servers
 	t.Run("checkVpn", checkVpn)
 }
 
 func sshBastion(t *testing.T) {
-	ssh.CheckSshConnection(t, bastionHost(t))
+	for i := 0; i < bastionCount; i++ {
+		ssh.CheckSshConnection(t, bastionHost(t, i))
+	}
 }
 
 func sshWeb(t *testing.T) {
-	jumpSsh(t, "whoami", sshUserName, false)
+	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
+		for indexWeb := 0; indexWeb < webServerCount; indexWeb++ {
+			jumpSsh(t, indexBastion, indexWeb, "whoami", sshUserName, false)
+		}
+	}
 }
 
 func netstatNginx(t *testing.T) {
@@ -86,7 +93,9 @@ func netstatNginx(t *testing.T) {
 }
 
 func curlWebServer(t *testing.T) {
-	curlService(t, "nginx", "", "80", "200")
+	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
+		curlService(t, indexBastion, "nginx", "", "80", "200")
+	}
 }
 
 func checkVpn(t *testing.T) {
@@ -131,13 +140,15 @@ func sanitizedVcnId(t *testing.T) string {
 
 // ~~~~~~~~~~~~~~~~ Helper functions ~~~~~~~~~~~~~~~~
 
-func bastionHost(t *testing.T) ssh.Host {
-	bastionIP := terraform.OutputList(t, options, "BastionPublicIP")[0]
+func bastionHost(t *testing.T, index int) ssh.Host {
+	bastionIPs := terraform.OutputList(t, options, "BastionPublicIP")[0]
+	bastionIP := strings.Split(bastionIPs[1:len(bastionIPs)-1], " ")[index] // rewritten to connect to a particular bastion
 	return sshHost(t, bastionIP)
 }
 
-func webHost(t *testing.T) ssh.Host {
-	webIP := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
+func webHost(t *testing.T, index int) ssh.Host {
+	webIPs := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
+	webIP := strings.Split(webIPs[1:len(webIPs)-1], " ")[index] // rewritten to connect to a particular server
 	return sshHost(t, webIP)
 }
 
@@ -149,8 +160,8 @@ func sshHost(t *testing.T, ip string) ssh.Host {
 	}
 }
 
-func curlService(t *testing.T, serviceName string, path string, port string, returnCode string) {
-	bastionHost := bastionHost(t)
+func curlService(t *testing.T, indexBastion int, serviceName string, path string, port string, returnCode string) {
+	bastionHost := bastionHost(t, indexBastion)
 	webIPs := webServerIPs(t)
 
 	for _, cp := range webIPs {
@@ -169,7 +180,7 @@ func curlService(t *testing.T, serviceName string, path string, port string, ret
 			return out, nil
 		})
 
-		if out != returnCode {
+		if !strings.HasPrefix(out, returnCode) {
 			t.Fatalf("%s on %s: expected %q, got %q", serviceName, cp, returnCode, out)
 		}
 	}
@@ -183,9 +194,9 @@ func webServerIPs(t *testing.T) []string {
 	return terraform.OutputList(t, options, "WebServerPrivateIPs")
 }
 
-func jumpSsh(t *testing.T, command string, expected string, retryAssert bool) string {
-	bastionHost := bastionHost(t)
-	webHost := webHost(t)
+func jumpSsh(t *testing.T, indexBastion int, indexWeb int, command string, expected string, retryAssert bool) string {
+	bastionHost := bastionHost(t, indexBastion)
+	webHost := webHost(t, indexWeb)
 	description := fmt.Sprintf("ssh jump to %q with command %q", webHost.Hostname, command)
 
 	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
@@ -229,5 +240,9 @@ func loadKeyPair(t *testing.T) *ssh.KeyPair {
 
 func netstatService(t *testing.T, service string, port string, expectedCount int) {
 	command := fmt.Sprintf("sudo netstat -tnlp | grep '%s' | grep ':%s' | wc -l", service, port)
-	jumpSsh(t, command, strconv.Itoa(expectedCount), true)
+	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
+		for indexWeb := 0; indexWeb < webServerCount; indexWeb++ {
+			jumpSsh(t, indexBastion, indexWeb, command, strconv.Itoa(expectedCount), true)
+		}
+	}
 }
