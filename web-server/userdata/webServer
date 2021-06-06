@@ -22,7 +22,7 @@ retry() {
 
 
 echo '################### server userdata begins #####################'
-touch ~opc/userdata.`date +%s`.start
+touch ~opc/userdata."$(date +%s)".start
 
 echo '########## setup screen ###############'
 
@@ -32,21 +32,21 @@ grep -q '^defscrollback 102400' /etc/screenrc || sed -i -e 's/^\(defscrollback\)
 
 echo '########## setup nginx ###############'
 
-yum -y install nginx16
+yum -y install nginx
 # comment original OEL6 config:
-sed -i '/^ *server {/,+20s/^/#/' /etc/nginx/nginx.conf
+[ -f "/etc/nginx/nginx.conf" ] && sed -i '/^ *server {/,+20s/^/#/' /etc/nginx/nginx.conf
 # wait until config is uploaded there, then do restart
 
 if retry 5 [ -f $nginx_conf ];then
     cp $nginx_conf /etc/nginx/conf.d/
 fi
 
-systemctl enable nginx16-nginx.service
-systemctl start nginx16-nginx.service
+systemctl enable nginx
+systemctl start nginx
 
 echo '########## open ports in firewall ###############'
 firewall-offline-cmd --add-port=80/tcp
 systemctl reload firewalld
 
-touch ~opc/userdata.`date +%s`.finish
+touch ~opc/userdata."$(date +%s)".finish
 echo '################### BDSQL Control Plane server userdata ends #######################'
