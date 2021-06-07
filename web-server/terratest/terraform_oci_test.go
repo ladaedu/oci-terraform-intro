@@ -73,7 +73,7 @@ func runSubtests(t *testing.T) {
 	t.Run("nginxVersion", nginxVersion)   // rewritten to check all web servers
 	t.Run("netstatNginx", netstatNginx)   // rewritten to send the command to all web servers
 	t.Run("curlWebServer", curlWebServer) // rewritten to check all web servers
-	t.Run("checkVpn", checkVpn)
+	// t.Run("checkVpn", checkVpn)
 }
 
 // tests all bastions
