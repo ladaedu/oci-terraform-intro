@@ -8,17 +8,19 @@ resource "oci_core_instance" "Bastion" {
   display_name        = "bastion${count.index}-${terraform.workspace}"
   hostname_label      = "bastion${count.index}"
 
+  create_vnic_details {
+    subnet_id = oci_core_subnet.BastionSubnet[count.index % 2].id
+  }
+
   source_details {
     source_type = "image"
     source_id   = var.InstanceImageOCID[var.region]
   }
 
   shape     = var.TestServerShape
-  subnet_id = oci_core_subnet.BastionSubnet[count.index % 2].id
 
   metadata = {
     ssh_authorized_keys = file(var.ssh_public_key)
     user_data           = base64encode(file(var.BastionServerBootStrap))
   }
 }
-
