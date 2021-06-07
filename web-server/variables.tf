@@ -32,7 +32,7 @@ variable "availability_domain" {
 }
 
 variable "TestServerShape" {
-  default = "VM.Standard2.1"
+  default = "VM.Standard.E4.Flex"
 }
 
 variable "InstanceImageOCID" {
@@ -43,11 +43,11 @@ variable "InstanceImageOCID" {
   # and search for image with name Linux-7.6-2019, like written below (with different date).
   # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
-    // Oracle-Linux-7.6-2019.02.20-0
-    eu-frankfurt-1 = "ocid1.instance.oc1.eu-frankfurt-1.antheljtr2zjsvycwongkpwnaiqjrwukkjcqptlqykuhe6sa6vtkqtjg3keq", 
+    // Oracle-Linux-7.9-2021.05.12-0
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaprt6uk32tylin3owcddyllao3uthmo7vheqepeybvjj6to7xkdgq",
+
   }
 }
-  
 
 ####################################################################################################
 variable "WebServerBootStrap" {
