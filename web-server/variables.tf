@@ -45,9 +45,9 @@ variable "InstanceImageOCID" {
   default = {
     // Oracle-Linux-7.6-2019.02.20-0
     eu-frankfurt-1 = "ocid1.instance.oc1.eu-frankfurt-1.antheljtr2zjsvycwongkpwnaiqjrwukkjcqptlqykuhe6sa6vtkqtjg3keq", 
-
   }
 }
+  
 
 ####################################################################################################
 variable "WebServerBootStrap" {
