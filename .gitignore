@@ -11,10 +11,3 @@ go.sum
 # user emails (user names):
 variables-users.tf
 #
-web-server/bastion-network.tf
-web-server/bastion.tf
-web-server/compute.tf
-web-server/datasources.tf
-web-server/lb.tf
-web-server/outputs.tf
-web-server/subnet.tf
