@@ -23,3 +23,11 @@ output "BastionPublicIP" {
 output "VcnID" {
   value = [oci_core_virtual_network.VCN.id]
 }
+
+output "WebServerIDs" {
+  value = [oci_core_instance.WebServer.*.id]
+}
+
+output "BastionSubnetIDs" {
+  value = [oci_core_subnet.BastionSubnet.*.id]
+}
