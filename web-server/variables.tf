@@ -32,7 +32,7 @@ variable "availability_domain" {
 }
 
 variable "TestServerShape" {
-  default = "VM.Standard.E4.Flex"
+  default = "VM.Standard.E3.Flex"
 }
 
 variable "InstanceImageOCID" {
