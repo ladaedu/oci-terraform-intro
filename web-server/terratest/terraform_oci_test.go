@@ -65,14 +65,16 @@ func TestWithoutProvisioning(t *testing.T) {
 
 func runSubtests(t *testing.T) {
 	t.Run("sshBastion", sshBastion)
-	t.Run("sshWeb", sshWeb)
-	t.Run("netstatNginx", netstatNginx)
-	t.Run("curlWebServer", curlWebServer)
+	// t.Run("sshWeb", sshWeb)
+	// t.Run("netstatNginx", netstatNginx)
+	// t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
 }
 
 func sshBastion(t *testing.T) {
-	ssh.CheckSshConnection(t, bastionHost(t))
+	for _, bastionHost := range bastionHosts(t) {
+		ssh.CheckSshConnection(t, bastionHost)
+	}
 }
 
 func sshWeb(t *testing.T) {
@@ -131,6 +133,16 @@ func sanitizedVcnId(t *testing.T) string {
 func bastionHost(t *testing.T) ssh.Host {
 	bastionIP := terraform.OutputList(t, options, "BastionPublicIP")[0]
 	return sshHost(t, bastionIP)
+}
+
+func bastionHosts(t *testing.T) []ssh.Host {
+	bastionIPs := terraform.OutputList(t, options, "BastionPublicIP")[0]
+	ipArray := strings.Fields(bastionIPs[1:len(bastionIPs) - 1])
+	sshHosts := make([]ssh.Host, len(ipArray))
+	for i, ip := range ipArray {
+		sshHosts[i] = sshHost(t, ip)
+	}
+	return sshHosts
 }
 
 func webHost(t *testing.T) ssh.Host {
