@@ -1,11 +1,14 @@
 package terratest
 
 import (
+	"bytes"
 	"context"
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
 	"regexp"
+	"strconv"
 	"strings"
 	"testing"
 	"time"
@@ -23,19 +26,20 @@ const (
 	nginxName      = "nginx"
 	nginxPath      = "/usr/sbin"
 	nginxPort      = "80"
-	webServerCount = 3 // added
-	bastionCount   = 2 // added
+	startupLogFile = "startup-log.txt" //added
 	// Terratest retries
 	maxRetries          = 20
 	sleepBetweenRetries = 5 * time.Second
 )
 
 var (
-	options *terraform.Options
+	options        *terraform.Options
+	webServerCount int // added
+	bastionCount   int // added
 )
 
-func terraformEnvOptions() *terraform.Options {
-	return &terraform.Options{
+func terraformEnvOptions(t *testing.T) {
+	options = &terraform.Options{
 		TerraformDir: "..",
 		Vars: map[string]interface{}{
 			"region":           os.Getenv("TF_VAR_region"),
@@ -49,10 +53,18 @@ func terraformEnvOptions() *terraform.Options {
 			"ssh_private_key": os.Getenv("TF_VAR_ssh_private_key"),
 		},
 	}
+
+	ipMatcher := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`)
+
+	bastionIPs := terraform.Output(t, options, "BastionPublicIP")
+	bastionCount = len(ipMatcher.FindAllStringIndex(bastionIPs, -1))
+
+	webServerIPs := terraform.Output(t, options, "WebServerPrivateIPs")
+	webServerCount = len(ipMatcher.FindAllStringIndex(webServerIPs, -1))
 }
 
 func TestTerraform(t *testing.T) {
-	options = terraformEnvOptions()
+	terraformEnvOptions(t)
 
 	// terraform.WorkspaceSelectOrNew(t, options, "terratest-vita")
 
@@ -62,17 +74,20 @@ func TestTerraform(t *testing.T) {
 }
 
 func TestWithoutProvisioning(t *testing.T) {
-	options = terraformEnvOptions()
+	terraformEnvOptions(t)
 
 	runSubtests(t)
 }
 
 func runSubtests(t *testing.T) {
-	t.Run("sshBastion", sshBastion)       // rewritten to check all bastions
-	t.Run("sshWeb", sshWeb)               // rewritten to check all web servers
-	t.Run("nginxVersion", nginxVersion)   // rewritten to check all web servers
-	t.Run("netstatNginx", netstatNginx)   // rewritten to send the command to all web servers
-	t.Run("curlWebServer", curlWebServer) // rewritten to check all web servers
+	t.Run("sshBastion", sshBastion)           // rewritten to check all bastions
+	t.Run("sshWeb", sshWeb)                   // rewritten to check all web servers
+	t.Run("nginxVersion", nginxVersion)       // rewritten to check all web servers
+	t.Run("startupFinished", startupFinished) // rewritten to check all web servers
+	t.Run("startupNoErrors", startupNoErrors) // rewritten to check all web servers
+	t.Run("netstatNginx", netstatNginx)       // rewritten to send the command to all web servers
+	t.Run("curlWebServer", curlWebServer)     // rewritten to check all web servers
+	t.Run("loadBalancerCheck", loadBalancer)  // rewritten to check all web servers
 	// t.Run("checkVpn", checkVpn)
 }
 
@@ -101,7 +116,33 @@ func nginxVersion(t *testing.T) {
 
 	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
 		for indexWeb := 0; indexWeb < webServerCount; indexWeb++ {
-			jumpSsh(t, indexBastion, indexWeb, fmt.Sprintf("%s/%s -v", nginxPath, nginxName), re, true)
+			jumpSsh(t, indexBastion, indexWeb, fmt.Sprintf("%s/%s -v", nginxPath, nginxName), re, false)
+		}
+	}
+}
+
+// tests all web servers through all bastions
+// checks that the startup script started and finished
+func startupFinished(t *testing.T) {
+	re := regexp.MustCompile(`.*userdata\.[0-9]+.start.*userdata\.[0-9]+.finish`)
+
+	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
+		for indexWeb := 0; indexWeb < webServerCount; indexWeb++ {
+			jumpSsh(t, indexBastion, indexWeb, `echo ~/userdata.*`, re, false)
+		}
+	}
+}
+
+// tests all web servers through all bastions
+// checks that the startup script have not logged any errors
+func startupNoErrors(t *testing.T) {
+	successString := "No errors"
+
+	re := regexp.MustCompile(fmt.Sprintf(`^%s$`, regexp.QuoteMeta(successString)))
+
+	for indexBastion := 0; indexBastion < bastionCount; indexBastion++ {
+		for indexWeb := 0; indexWeb < webServerCount; indexWeb++ {
+			jumpSsh(t, indexBastion, indexWeb, fmt.Sprintf(`grep -qe error %s || echo "%s"`, startupLogFile, successString), re, true)
 		}
 	}
 }
@@ -119,9 +160,9 @@ func curlWebServer(t *testing.T) {
 
 func checkVpn(t *testing.T) {
 	// client
-	// config := common.CustomProfileConfigProvider("", "CzechEdu")
-	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
-	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	config := common.CustomProfileConfigProvider("", "DEFAULT")
+	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
+	//c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
 	c.UserAgent = "terratest"
 
 	// request
@@ -181,6 +222,50 @@ func sshHost(t *testing.T, ip string) ssh.Host {
 		Hostname:    ip,
 		SshUserName: sshUserName,
 		SshKeyPair:  loadKeyPair(t),
+	}
+}
+
+// checks that the loadbalancer spreads requests evenly
+func loadBalancer(t *testing.T) {
+	const attempts = 100
+
+	results := make([]int, webServerCount)
+
+	lb_ip := strings.Split(terraform.Output(t, options, "lb_ip"), "\"")[1]
+
+	for i := 0; i < attempts; i++ {
+		var out bytes.Buffer
+
+		cmd := exec.Command("curl", "-s", "-w", "%{http_code}", lb_ip)
+		cmd.Stdout = &out
+		err := cmd.Run()
+
+		if err != nil {
+			t.Fatalf("error in calling ssh: %s", err.Error())
+		}
+
+		re := regexp.MustCompile("web[0-9]+")
+		web_idx, _ := strconv.Atoi(re.FindString(out.String())[3:])
+
+		results[web_idx]++
+
+	}
+
+	var min int = attempts
+	var max int = 0
+
+	for i := range results {
+		if results[i] < min {
+			min = results[i]
+		}
+
+		if results[i] > max {
+			max = results[i]
+		}
+	}
+
+	if max-min > 2 {
+		t.Fatalf("loadbalancer does not balance enough")
 	}
 }
 
