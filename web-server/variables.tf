@@ -1,32 +1,38 @@
 variable "tenancy_ocid" {
+  default = "ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a"
 }
 
 variable "user_ocid" {
+  default = "ocid1.user.oc1..aaaaaaaaq623ujht4oif2p6qkmoo5xm4i44eizvvxwlybgri2cqoqukqjela"
 }
 
 variable "fingerprint" {
+  default = "9a:80:84:d0:dd:92:e7:66:ed:8d:90:84:e5:45:ea:27"
 }
 
 variable "private_key_path" {
+  default = "/home/vit/Downloads/vitek.skrhak-06-07-08-49.pem"
 }
 
 variable "ssh_public_key" {
+  default = "/home/vit/.ssh/id_rsa.pub"
 }
 
 variable "ssh_private_key" {
+  default = "/home/vit/.ssh/id_rsa"
 }
 
 variable "region" {
-  default = "us-phoenix-1"
+  default = "eu-frankfurt-1"
 }
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
-#variable "availability_domain" {
-#  default = 1
-#}
+variable "availability_domain" {
+  default = 1
+}
 
 variable "TestServerShape" {
-  default = "VM.Standard2.1"
+  default = "VM.Standard.E4.Flex"
 }
 
 variable "InstanceImageOCID" {
@@ -37,9 +43,9 @@ variable "InstanceImageOCID" {
   # and search for image with name Linux-7.6-2019, like written below (with different date).
   # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
-    // Oracle-Linux-7.6-2019.02.20-0
-    us-phoenix-1 = "ocid1.image.oc1.phx.aaaaaaaacss7qgb6vhojblgcklnmcbchhei6wgqisqmdciu3l4spmroipghq"
-    uk-london-1  = "ocid1.image.oc1.uk-london-1.aaaaaaaarruepdlahln5fah4lvm7tsf4was3wdx75vfs6vljdke65imbqnhq"
+    // Oracle-Linux-7.9-2021.05.12-0
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaprt6uk32tylin3owcddyllao3uthmo7vheqepeybvjj6to7xkdgq",
+
   }
 }
 
@@ -57,7 +63,7 @@ variable "WebVMCount" {
 }
 
 variable "BastionVMCount" {
-  default = 1
+  default = 2
 }
 
 ####################################################################################################
@@ -75,6 +81,6 @@ variable "BastionSubnetCIDRs" {
 }
 
 variable "CompartmentOCID" {
-  default = "ocid1.compartment.oc1..aaaaaaaa5ho3ftokbmcdpn34mxhjcmuear2tnwyx54sxy6qpcqtaiwqucqlq"
+  default = "ocid1.compartment.oc1..aaaaaaaaicbtnwruibyhgerp77cep5i6gnn6o6ouz74yyok4dgu2gsjhslga"
 }
 
