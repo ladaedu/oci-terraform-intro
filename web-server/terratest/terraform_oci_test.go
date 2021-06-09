@@ -56,7 +56,7 @@ func terraformEnvOptions(t *testing.T) {
 
 	ipMatcher := regexp.MustCompile(`[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+`)
 
-	bastionIPs := terraform.Output(t, options, "lb_ip")
+	bastionIPs := terraform.Output(t, options, "BastionPublicIP")
 	bastionCount = len(ipMatcher.FindAllStringIndex(bastionIPs, -1))
 
 	webServerIPs := terraform.Output(t, options, "WebServerPrivateIPs")
