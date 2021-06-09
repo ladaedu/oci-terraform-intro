@@ -4,9 +4,9 @@ output "WebServerPrivateIPs" {
   value = [oci_core_instance.WebServer.*.private_ip]
 }
 
-#output "WebServerPublicIPs" {
-#  value = ["${oci_core_instance.WebServer.*.public_ip}"]
-#}
+output "WebServerPublicIPs" {
+  value = ["${oci_core_instance.WebServer.*.public_ip}"]
+}
 
 output "WebServerHostNames" {
   value = [oci_core_instance.WebServer.*.hostname_label]

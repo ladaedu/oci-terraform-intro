@@ -1,7 +1,7 @@
 #!/bin/bash -x
 
 nginx_conf=/home/opc/nginx-demo.conf
-
+exec 2>~opc/startup-log.txt
 
 retry() {
     local -r -i max_attempts="$1"; shift
@@ -22,10 +22,11 @@ retry() {
 
 
 echo '################### server userdata begins #####################'
-touch ~opc/userdata.`date +%s`.start
+touch ~opc/userdata."$(date +%s)".start
 
 echo '########## setup screen ###############'
 
+yum update
 yum -y install screen
 grep -q '^defscrollback 102400' /etc/screenrc || sed -i -e 's/^\(defscrollback\).*/\1 102400/' /etc/screenrc
 
@@ -33,7 +34,7 @@ echo '########## setup nginx ###############'
 
 yum -y install nginx
 # comment original OEL6 config:
-sed -i '/^ *server {/,+20s/^/#/' /etc/nginx/nginx.conf
+[ -f "/etc/nginx/nginx.conf" ] && sed -i '/^ *server {/,+20s/^/#/' /etc/nginx/nginx.conf
 # wait until config is uploaded there, then do restart
 
 if retry 5 [ -f $nginx_conf ];then
@@ -47,5 +48,5 @@ echo '########## open ports in firewall ###############'
 firewall-offline-cmd --add-port=80/tcp
 systemctl reload firewalld
 
-touch ~opc/userdata.`date +%s`.finish
+touch ~opc/userdata."$(date +%s)".finish
 echo '################### BDSQL Control Plane server userdata ends #######################'

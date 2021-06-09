@@ -2,20 +2,21 @@ export TF_VAR_region=eu-frankfurt-1
 export PS1='\u@\h \w [terraform web-server $TF_VAR_region]\$ '
 ### Authentication details
 export TF_VAR_tenancy_ocid=ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a
-export TF_VAR_user_ocid=ocid1.user.oc1..aaaaaaaaycpmanax7emnx3lglmsjcvepnriybhloczkcthkaabjqkscsjmca
-export TF_VAR_fingerprint=aa:3f:89:06:31:fd:9d:d1:e0:ca:8f:6e:08:96:18:fc
-export TF_VAR_private_key_path=student-05-13-22-03.pem
+export TF_VAR_user_ocid=ocid1.user.oc1..aaaaaaaawcnv6rupe65khoaixjfozzazx45v74z7piphbley4ogfdsikntgq
+export TF_VAR_fingerprint=af:08:97:b1:11:d2:b1:96:79:fa:e7:19:d9:1e:c0:2c
+export TF_VAR_private_key_path=/home/jirka/Downloads/jiriklepl-05-18-14-32.pem
 
 #export TF_VAR_availability_domain=1
 export TF_VAR_TestServerShape="VM.Standard2.1"
 
-export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaa3sbcplfwq3y6vjsyszbxskpf6x3vxmsatasachrbau52pkmsz5wq
+export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaazdyl6y7calgvq3nkugyfxqhayq5y2fxmet7rhwzpucpekj3dwx7a
 
 ### Public/private keys used on the instance
-export TF_VAR_ssh_public_key=/home/dobias/.ssh/id_rsa.pub
-export TF_VAR_ssh_private_key=/home/dobias/.ssh/id_rsa
+export TF_VAR_ssh_public_key=/home/jirka/Documents/oci-terraform-intro/web-server/id_rsa.pub
+export TF_VAR_ssh_private_key=/home/jirka/Documents/oci-terraform-intro/web-server/id_rsa
 
-#export TF_VAR_InstanceImageOCID="{us-phoenix-1 = \"ocid1.image.oc1.phx.aaaaaaaasez4lk2lucxcm52nslj5nhkvbvjtfies4yopwoy4b3vysg5iwjra\",
-#                                  eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
-#                                  }"
+export TF_VAR_InstanceImageOCID="{eu-frankfurt-1 = \"ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha\", 
+                                  }"
 
+alias tf=terraform
+tf init

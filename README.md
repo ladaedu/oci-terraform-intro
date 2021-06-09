@@ -281,7 +281,7 @@ curl localhost
 
 ## Terratest
 
-In [terraform_oci_test.go](terratest/terraform_oci_test.go), there are 4 small tests:
+In [terraform_oci_test.go](web-server/terratest/terraform_oci_test.go), there are 4 small tests:
 
 - ssh to bastion
 - ssh to webserver (via bastion)

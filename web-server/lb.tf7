@@ -3,7 +3,7 @@
 ## Variables
 ##########################################################################################
 variable "load_balancer_shape" {
-  default = "100Mbps"
+  default = "400Mbps"
 }
 
 variable "LBCount" {
@@ -59,7 +59,7 @@ resource "oci_load_balancer_listener" "lb-web-listener" {
   port                     = 80
   protocol                 = "HTTP"
   connection_configuration {
-    idle_timeout_in_seconds = "300"
+    idle_timeout_in_seconds = "300" 
   }
 }
 
@@ -144,4 +144,3 @@ output "lb_ip" {
 output "lb_is_public" {
   value = [oci_load_balancer.lb-web.ip_address_details[0].is_public]
 }
-
