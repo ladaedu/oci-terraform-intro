@@ -3,7 +3,7 @@
 ## Variables
 ##########################################################################################
 variable "load_balancer_shape" {
-  default = "100Mbps"
+  default = "400Mbps"
 }
 
 variable "LBCount" {
