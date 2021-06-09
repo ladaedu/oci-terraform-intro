@@ -4,10 +4,10 @@ data "oci_identity_availability_domains" "ADs" {
 }
 
 # Get fault domains for selected AD
-#data "oci_identity_fault_domains" "FDs" {
-#    availability_domain = "${lookup(data.oci_identity_availability_domains.ADs.availability_domains[var.availability_domain],"name")}"
-#    compartment_id      = "${var.CompartmentOCID}"
-#}
+data "oci_identity_fault_domains" "FDs" {
+    availability_domain = "NoND:EU-FRANKFURT-1-AD-2"
+    compartment_id      = "${var.CompartmentOCID}"
+}
 
 # Tenancy
 data "oci_identity_tenancy" "tenancy" {
@@ -15,9 +15,9 @@ data "oci_identity_tenancy" "tenancy" {
 }
 
 # Gets home region
-# data "oci_identity_regions" "home-region" {
-#  filter {
-#    name   = "key"
-#    values = ["${data.oci_identity_tenancy.tenancy.home_region_key}"]
-#  }
-#}
+data "oci_identity_regions" "home-region" {
+  filter {
+    name   = "key"
+    values = ["${data.oci_identity_tenancy.tenancy.home_region_key}"]
+  }
+}

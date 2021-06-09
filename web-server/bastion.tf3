@@ -3,10 +3,9 @@
 // accessible with ssh
 resource "oci_core_instance" "Bastion" {
   count               = min(var.BastionVMCount,2)
-  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index % 2]["name"]
+  availability_domain = var.availability_domain
   compartment_id      = var.CompartmentOCID
   display_name        = "bastion${count.index}-${terraform.workspace}"
-  hostname_label      = "bastion${count.index}"
 
   source_details {
     source_type = "image"
@@ -14,7 +13,10 @@ resource "oci_core_instance" "Bastion" {
   }
 
   shape     = var.TestServerShape
-  subnet_id = oci_core_subnet.BastionSubnet[count.index % 2].id
+  create_vnic_details {
+    subnet_id = oci_core_subnet.BastionSubnet[count.index % 2].id
+    hostname_label      = "bastion${count.index}"
+  }
 
   metadata = {
     ssh_authorized_keys = file(var.ssh_public_key)

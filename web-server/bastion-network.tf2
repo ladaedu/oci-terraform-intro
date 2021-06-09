@@ -34,7 +34,7 @@ resource "oci_core_security_list" "BastionSubnetSeclist" {
 
 resource "oci_core_subnet" "BastionSubnet" {
   count               = min(var.BastionVMCount, 2)
-  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index]["name"]
+  availability_domain = var.availability_domain
   cidr_block          = var.BastionSubnetCIDRs[count.index]
   display_name        = "Bastion Subnet-${count.index}-${terraform.workspace}"
   dns_label           = "bastion${count.index}"
