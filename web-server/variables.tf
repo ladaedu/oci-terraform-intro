@@ -30,14 +30,14 @@ variable "availability_domain" {
 }
 
 variable "TestServerShape" {
-  default = "VM.Standard2.1"
+  default = "VM.Standard.E3.Flex"
 }
 
 variable "InstanceImageOCID" {
   type = map(string)
 
   default = {
-    us-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaad7zlitmahc5w5m7hv47jiwooiy7vqethdsl4vexdc3sfcrzkvi3q"
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha"
   }
 }
 

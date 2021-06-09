@@ -13,6 +13,9 @@ resource "oci_core_instance" "WebServer" {
   }
 
   shape     = var.TestServerShape
+  shape_config {
+    ocpus = 1
+  }
   create_vnic_details {
     hostname_label = "web${count.index}"
     subnet_id = oci_core_subnet.PrivateSubnet.id
