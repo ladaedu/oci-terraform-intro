@@ -197,9 +197,6 @@ func testLoadBalancerProperties(t *testing.T) {
 
 	exitIfNotNill(err)
 
-	fmt.Println(res)
-	fmt.Println(res.BackendSets)
-
 	expectedShape := "100Mbps"
 	actualShape := res.ShapeName
 
@@ -292,7 +289,6 @@ func checkVpn(t *testing.T) {
 
 func sanitizedVcnId(t *testing.T) string {
 	raw := terraform.OutputList(t, options, "VcnID")[0]
-	fmt.Println(raw)
 	return raw
 }
 
