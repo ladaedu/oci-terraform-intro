@@ -7,3 +7,4 @@
 *.swp
 tf-graph.dot*
 go.sum
+keys/*
