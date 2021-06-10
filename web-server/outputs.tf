@@ -23,3 +23,15 @@ output "BastionPublicIP" {
 output "VcnID" {
   value = [oci_core_virtual_network.VCN.id]
 }
+
+output "LoadBalancerId" {
+  value = [oci_load_balancer.lb-web.id]
+}
+
+output "BackendSetName" {
+  value = [oci_load_balancer_backend_set.lb-backendset-web.name]
+}
+
+output "WebServerIds" {
+  value = [oci_core_instance.WebServer.*.id]
+}
