@@ -8,6 +8,7 @@ import (
 	"github.com/gruntwork-io/terratest/modules/terraform"
 	"github.com/oracle/oci-go-sdk/common"
 	"github.com/oracle/oci-go-sdk/core"
+	"github.com/oracle/oci-go-sdk/identity"
 	"io/ioutil"
 	"os"
 	"strconv"
@@ -22,8 +23,8 @@ const (
 	nginxName   = "nginx"
 	nginxPort   = "80"
 	// Terratest retries
-	maxRetries          = 20
-	sleepBetweenRetries = 5 * time.Second
+	maxRetries          = 3
+	sleepBetweenRetries = 3 * time.Second
 )
 
 var (
@@ -69,6 +70,11 @@ func runSubtests(t *testing.T) {
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
+	t.Run("checkAvailabilityDomain", checkAvailabilityDomain)
+	t.Run("checkLoadBalancer", checkLoadBalancer)
+	t.Run("checkIsWebServerPrivate", checkIsWebServerPrivate)
+	t.Run("checkLoadBalancerIsPublic", checkLoadBalancerIsPublic)
+	t.Run("checkHostnames", checkHostnames)
 }
 
 func sshBastion(t *testing.T) {
@@ -76,7 +82,7 @@ func sshBastion(t *testing.T) {
 }
 
 func sshWeb(t *testing.T) {
-	jumpSsh(t, "whoami", sshUserName, false)
+	jumpSsh(t, "whoami", sshUserName, false, 0)
 }
 
 func netstatNginx(t *testing.T) {
@@ -121,6 +127,89 @@ func checkVpn(t *testing.T) {
 	}
 }
 
+func checkAvailabilityDomain(t *testing.T) {
+	config := common.CustomProfileConfigProvider("", "CzechEdu")
+	client, err := identity.NewIdentityClientWithConfigurationProvider(config)
+
+	compartmentID := options.Vars["CompartmentOCID"].(string)
+	request := identity.ListAvailabilityDomainsRequest{CompartmentId: &compartmentID}
+	response, err := client.ListAvailabilityDomains(context.Background(), request)
+	if err != nil {
+		t.Fatalf("error in: %s", err.Error())
+	}
+
+	expected := "NoND:EU-FRANKFURT-1-AD-1"
+	actual := response.Items[0].Name
+
+	if expected != *actual {
+		t.Fatalf("wrong availability domain: expected %q, got %q", expected, *actual)
+	}
+}
+
+func checkLoadBalancer(t *testing.T) {
+	lb_address := terraform.OutputList(t, options, "lb_ip")[0]
+	command := curl(lb_address, "80", "")
+	description := fmt.Sprintf("curl to load balancer on %s:80", lb_address)	
+
+	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+		out, err := ssh.CheckSshCommandE(t, bastionHost(t), command)
+		if err != nil {
+			return "", err
+		}
+
+		out = strings.TrimSpace(out)
+		return out, nil
+	})
+
+	if out != "200" {
+		t.Fatalf("can't connect to load balaner on address %s", lb_address)
+	}
+}
+
+func checkLoadBalancerIsPublic(t *testing.T) {
+	lb_is_public := terraform.OutputList(t, options, "lb_is_public")[0]
+
+	// assertions
+	expected := "true"
+	actual := lb_is_public
+
+	if expected != actual {
+		t.Fatalf("Load balaner must be public: expected %q, got %q", expected, actual)
+	}
+}
+
+func checkIsWebServerPrivate(t *testing.T) {
+	webServerDomain := getOutputList(t, "WebServerDomain")[0]
+
+	// assertions
+	expected := "private.demo.oraclevcn.com"
+	actual := webServerDomain
+
+	if expected != actual {
+		t.Fatalf("Web server must be private: expected domain %q, got %q", expected, actual)
+	}
+}
+
+func checkHostnames(t *testing.T) {
+	hostnames := getOutputList(t, "WebServerHostNames")
+	
+	if len(hostnames) != 3 {
+		t.Fatalf("3 hostnames should have been present")
+	}
+
+	if hostnames[0] != "web0" {
+		t.Fatalf("First hostname should be web0")
+	}
+
+	if hostnames[1] != "web1" {
+		t.Fatalf("First hostname should be web0")
+	}
+
+	if hostnames[2] != "web2" {
+		t.Fatalf("First hostname should be web0")
+	}
+}
+
 func sanitizedVcnId(t *testing.T) string {
 	raw := terraform.Output(t, options, "VcnID")
 	return strings.Split(raw, "\"")[1]
@@ -133,9 +222,16 @@ func bastionHost(t *testing.T) ssh.Host {
 	return sshHost(t, bastionIP)
 }
 
-func webHost(t *testing.T) ssh.Host {
-	webIP := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
+func webHost(t *testing.T, index int) ssh.Host {
+	webIP := getOutputList(t, "WebServerPrivateIPs")[index]
 	return sshHost(t, webIP)
+}
+
+func getOutputList(t *testing.T, listName string) []string {
+	listStr := terraform.OutputList(t, options, listName)[0]
+	listStr = strings.Trim(strings.Trim(listStr, "["), "]")
+	list := strings.Split(listStr, " ")
+	return list
 }
 
 func sshHost(t *testing.T, ip string) ssh.Host {
@@ -177,12 +273,12 @@ func curl(host string, port string, path string) string {
 }
 
 func webServerIPs(t *testing.T) []string {
-	return terraform.OutputList(t, options, "WebServerPrivateIPs")
+	return getOutputList(t, "WebServerPrivateIPs")
 }
 
-func jumpSsh(t *testing.T, command string, expected string, retryAssert bool) string {
+func jumpSsh(t *testing.T, command string, expected string, retryAssert bool, index int) string {
 	bastionHost := bastionHost(t)
-	webHost := webHost(t)
+	webHost := webHost(t, index)
 	description := fmt.Sprintf("ssh jump to %q with command %q", webHost.Hostname, command)
 
 	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
@@ -226,5 +322,5 @@ func loadKeyPair(t *testing.T) *ssh.KeyPair {
 
 func netstatService(t *testing.T, service string, port string, expectedCount int) {
 	command := fmt.Sprintf("sudo netstat -tnlp | grep '%s' | grep ':%s' | wc -l", service, port)
-	jumpSsh(t, command, strconv.Itoa(expectedCount), true)
+	jumpSsh(t, command, strconv.Itoa(expectedCount), true, 0)
 }
