@@ -10,6 +10,8 @@ import (
 	"testing"
 	"time"
 
+	"os/exec"
+
 	"github.com/gruntwork-io/terratest/modules/retry"
 	"github.com/gruntwork-io/terratest/modules/ssh"
 	"github.com/gruntwork-io/terratest/modules/terraform"
@@ -73,6 +75,7 @@ func runSubtests(t *testing.T) {
 	t.Run("checkVpn", checkVpn)
 	t.Run("checkGetAllAvailabilityDomains", checkGetAllAvailabilityDomains)
 	t.Run("checkSubnetsCount", checkSubnetsCount)
+	t.Run("checkLoadBalancerCurl", checkLoadBalancerCurl)
 }
 
 func sshBastion(t *testing.T) {
@@ -149,7 +152,7 @@ func checkGetAllAvailabilityDomains(t *testing.T) {
 	t.Log("AVs: " + avs)
 
 	// assertions
-	expected := "NoND:EU-FRANKFURT-1-AD-2"
+	expected := "NoND:EU-FRANKFURT-1-AD-3"
 
 	if !strings.Contains(avs, expected) {
 		t.Fatalf("missing expected availability domain %q", expected)
@@ -178,7 +181,6 @@ func checkSubnetsCount(t *testing.T) {
 		t.Fatalf("error occured: %s", err.Error())
 	}
 
-	allSubnetIDs := map[string][]string{}
 	for _, vcnID := range vcnIDs {
 		request := core.ListSubnetsRequest{
 			CompartmentId: &compartmentID,
@@ -189,9 +191,13 @@ func checkSubnetsCount(t *testing.T) {
 			t.Fatalf("error occured: %s", err.Error())
 		}
 
+		// assertions
+		expected := 3
 		t.Logf(vcnID+", subnets count: %i", len(response.Items))
+		if len(response.Items) != expected {
+			t.Fatalf("Wrong number of subnets")
+		}
 	}
-	t.Logf("All subnets count: %d", len(allSubnetIDs))
 }
 
 // GetAllVcnIDsE gets the list of VCNs available in the given compartment.
@@ -217,6 +223,24 @@ func GetAllVcnIDsE(t *testing.T, compartmentID string) ([]string, error) {
 		ids = append(ids, *vcn.Id)
 	}
 	return ids, nil
+}
+
+func checkLoadBalancerCurl(t *testing.T) {
+	lb_address := terraform.OutputList(t, options, "lb_ip")[0]
+
+	for i := 0; i < 10; i++ {
+		result, err := exec.Command("curl", "http://"+lb_address).Output()
+		response := string(result)
+		if err != nil {
+			t.Fatalf("error occured: %s", err.Error())
+		}
+
+		// assertions
+		expected := "web0"
+		if !strings.Contains(response, expected) {
+			t.Fatalf("Different name contained.")
+		}
+	}
 }
 
 func sanitizedVcnId(t *testing.T) string {
