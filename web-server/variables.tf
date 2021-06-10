@@ -22,7 +22,7 @@ variable "region" {
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
 variable "availability_domain" {
-  default = "NoND:EU-FRANKFURT-1-AD-2"
+  default = 2
 }
 
 variable "TestServerShape" {

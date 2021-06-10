@@ -3,17 +3,19 @@ package terratest
 import (
 	"context"
 	"fmt"
-	"github.com/gruntwork-io/terratest/modules/retry"
-	"github.com/gruntwork-io/terratest/modules/ssh"
-	"github.com/gruntwork-io/terratest/modules/terraform"
-	"github.com/oracle/oci-go-sdk/common"
-	"github.com/oracle/oci-go-sdk/core"
 	"io/ioutil"
 	"os"
 	"strconv"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/gruntwork-io/terratest/modules/retry"
+	"github.com/gruntwork-io/terratest/modules/ssh"
+	"github.com/gruntwork-io/terratest/modules/terraform"
+	"github.com/oracle/oci-go-sdk/common"
+	"github.com/oracle/oci-go-sdk/core"
+	"github.com/oracle/oci-go-sdk/identity"
 )
 
 const (
@@ -69,6 +71,8 @@ func runSubtests(t *testing.T) {
 	t.Run("netstatNginx", netstatNginx)
 	t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
+	t.Run("checkGetAllAvailabilityDomains", checkGetAllAvailabilityDomains)
+	t.Run("checkSubnetsCount", checkSubnetsCount)
 }
 
 func sshBastion(t *testing.T) {
@@ -119,6 +123,100 @@ func checkVpn(t *testing.T) {
 	if expected != *actual {
 		t.Fatalf("wrong cidr block: expected %q, got %q", expected, *actual)
 	}
+}
+
+func checkGetAllAvailabilityDomains(t *testing.T) {
+	options = terraformEnvOptions()
+	configProvider := common.DefaultConfigProvider()
+	client, err := identity.NewIdentityClientWithConfigurationProvider(configProvider)
+	if err != nil {
+		t.Fatalf("error occured: %s", err.Error())
+	}
+
+	compartmentID := options.Vars["CompartmentOCID"].(string)
+
+	request := identity.ListAvailabilityDomainsRequest{CompartmentId: &compartmentID}
+	response, err := client.ListAvailabilityDomains(context.Background(), request)
+	if err != nil {
+		t.Fatalf("error in: %s", err.Error())
+	}
+
+	if len(response.Items) == 0 {
+		t.Fatalf("No availability domains found in the %s compartment", compartmentID)
+	}
+
+	avs := strings.Join(availabilityDomainsNames(response.Items), " ")
+	t.Log("AVs: " + avs)
+
+	// assertions
+	expected := "NoND:EU-FRANKFURT-1-AD-2"
+
+	if !strings.Contains(avs, expected) {
+		t.Fatalf("missing expected availability domain %q", expected)
+	}
+}
+
+func availabilityDomainsNames(ads []identity.AvailabilityDomain) []string {
+	names := []string{}
+	for _, ad := range ads {
+		names = append(names, *ad.Name)
+	}
+	return names
+}
+
+func checkSubnetsCount(t *testing.T) {
+	options = terraformEnvOptions()
+	configProvider := common.DefaultConfigProvider()
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
+	if err != nil {
+		t.Fatalf("error occured: %s", err.Error())
+	}
+
+	compartmentID := options.Vars["CompartmentOCID"].(string)
+	vcnIDs, err := GetAllVcnIDsE(t, compartmentID)
+	if err != nil {
+		t.Fatalf("error occured: %s", err.Error())
+	}
+
+	allSubnetIDs := map[string][]string{}
+	for _, vcnID := range vcnIDs {
+		request := core.ListSubnetsRequest{
+			CompartmentId: &compartmentID,
+			VcnId:         &vcnID,
+		}
+		response, err := client.ListSubnets(context.Background(), request)
+		if err != nil {
+			t.Fatalf("error occured: %s", err.Error())
+		}
+
+		t.Logf(vcnID+", subnets count: %i", len(response.Items))
+	}
+	t.Logf("All subnets count: %d", len(allSubnetIDs))
+}
+
+// GetAllVcnIDsE gets the list of VCNs available in the given compartment.
+func GetAllVcnIDsE(t *testing.T, compartmentID string) ([]string, error) {
+	configProvider := common.DefaultConfigProvider()
+	client, err := core.NewVirtualNetworkClientWithConfigurationProvider(configProvider)
+	if err != nil {
+		return nil, err
+	}
+
+	request := core.ListVcnsRequest{CompartmentId: &compartmentID}
+	response, err := client.ListVcns(context.Background(), request)
+	if err != nil {
+		return nil, err
+	}
+
+	if len(response.Items) == 0 {
+		return nil, fmt.Errorf("No VCNs found in the %s compartment", compartmentID)
+	}
+
+	ids := []string{}
+	for _, vcn := range response.Items {
+		ids = append(ids, *vcn.Id)
+	}
+	return ids, nil
 }
 
 func sanitizedVcnId(t *testing.T) string {

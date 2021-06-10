@@ -3,7 +3,7 @@
 // accessible with ssh
 resource "oci_core_instance" "Bastion" {
   count               = min(var.BastionVMCount,2)
-  availability_domain = var.availability_domain
+  availability_domain = data.oci_identity_availability_domains.ADs.availability_domains[count.index % 2]["name"]
   compartment_id      = var.CompartmentOCID
   display_name        = "bastion${count.index}-${terraform.workspace}"
 
