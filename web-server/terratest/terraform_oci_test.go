@@ -22,7 +22,7 @@ const (
 	nginxName   = "nginx"
 	nginxPort   = "80"
 	// Terratest retries
-	maxRetries          = 20
+	maxRetries          = 3
 	sleepBetweenRetries = 5 * time.Second
 )
 
@@ -65,10 +65,56 @@ func TestWithoutProvisioning(t *testing.T) {
 
 func runSubtests(t *testing.T) {
 	t.Run("sshBastion", sshBastion)
-	// t.Run("sshWeb", sshWeb)
-	// t.Run("netstatNginx", netstatNginx)
-	// t.Run("curlWebServer", curlWebServer)
+	t.Run("sshWeb", sshWeb)
+	t.Run("netstatNginx", netstatNginx)
+	t.Run("curlWebServer", curlWebServer)
 	t.Run("checkVpn", checkVpn)
+	t.Run("checkCurlLoadBalancer", checkCurlLoadBalancer)
+	t.Run("checkSshLoadBalancer", checkCurlLoadBalancer)
+	t.Run("checkPublicLoadBalancer", checkPublicLoadBalancer)
+}
+
+func checkSshLoadBalancer(t *testing.T){
+	lbIP := terraform.OutputList(t, options, "lb_ip")[0]
+	loadBalancerSsh := sshHost(t, lbIP)
+	err := ssh.CheckSshConnectionE(t, loadBalancerSsh)  
+	if err == nil {
+		t.Fatalf("error in calling ssh Load Balancer: %s", err.Error())
+	}
+
+}
+
+func checkPublicLoadBalancer(t *testing.T) {
+	publicLB := terraform.OutputList(t, options, "lb_is_public")[0]
+
+	if publicLB != "true" {
+		t.Fatalf("Load Balancer is not public!")
+	}
+
+}
+func checkCurlLoadBalancer(t *testing.T) {
+	host := terraform.OutputList(t, options, "lb_ip")[0]
+	fmt.Println("LB ip: " , host)
+	bastionHost := bastionHost(t)
+	port := "80"
+	// copy&paste from "curlService":
+	command := curl(host, port, "")
+	description := fmt.Sprintf("curl to %s:%s", host, port)
+
+	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
+		out, err := ssh.CheckSshCommandE(t, bastionHost, command)
+		if err != nil {
+			return "", err
+		}
+
+		out = strings.TrimSpace(out)
+		return out, nil
+	})
+	outCode := out[0:3]
+	returnCode := "200"
+	if outCode != returnCode {
+		t.Fatalf("%s: expected %q, got %q", host, returnCode, outCode)
+	}
 }
 
 func sshBastion(t *testing.T) {
@@ -78,11 +124,26 @@ func sshBastion(t *testing.T) {
 }
 
 func sshWeb(t *testing.T) {
-	jumpSsh(t, "whoami", sshUserName, false)
+	webIPs := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
+	webIPs = strings.Trim(strings.Trim(webIPs, "]"), "[")
+	webIPsFinal := strings.Split(webIPs, " ")
+	fmt.Println("webIpsFInal: ", webIPsFinal)
+	for i, ip := range webIPsFinal {
+		fmt.Println("iterator, IP: ", i, ip)
+		jumpSsh(t, "whoami", sshUserName, false, ip)
+	}
 }
 
 func netstatNginx(t *testing.T) {
-	netstatService(t, nginxName, nginxPort, 1)
+	webIPs := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
+	webIPs = strings.Trim(strings.Trim(webIPs, "]"), "[")
+	webIPsFinal := strings.Split(webIPs, " ")
+	fmt.Println("webIpsFInal: ", webIPsFinal)
+	for i, ip := range webIPsFinal {
+		fmt.Println("iterator, IP: ", i, ip)
+		netstatService(t, nginxName, nginxPort, 1, ip)
+	}
+	
 }
 
 func curlWebServer(t *testing.T) {
@@ -94,6 +155,8 @@ func checkVpn(t *testing.T) {
 	config := common.CustomProfileConfigProvider("", "CzechEdu")
 	c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(config)
 	// c, _ := core.NewVirtualNetworkClientWithConfigurationProvider(common.DefaultConfigProvider())
+	
+	c.UserAgent = "test"
 
 	// request
 	request := core.GetVcnRequest{}
@@ -145,9 +208,8 @@ func bastionHosts(t *testing.T) []ssh.Host {
 	return sshHosts
 }
 
-func webHost(t *testing.T) ssh.Host {
-	webIP := terraform.OutputList(t, options, "WebServerPrivateIPs")[0]
-	return sshHost(t, webIP)
+func webHost(t *testing.T, ip string) ssh.Host {
+	return sshHost(t, ip)
 }
 
 func sshHost(t *testing.T, ip string) ssh.Host {
@@ -177,9 +239,9 @@ func curlService(t *testing.T, serviceName string, path string, port string, ret
 			out = strings.TrimSpace(out)
 			return out, nil
 		})
-
-		if out != returnCode {
-			t.Fatalf("%s on %s: expected %q, got %q", serviceName, cp, returnCode, out)
+		outCode := out[0:3]
+		if outCode != returnCode {
+			t.Fatalf("%s on %s: expected %q, got %q", serviceName, cp, returnCode, outCode)
 		}
 	}
 }
@@ -192,9 +254,9 @@ func webServerIPs(t *testing.T) []string {
 	return terraform.OutputList(t, options, "WebServerPrivateIPs")
 }
 
-func jumpSsh(t *testing.T, command string, expected string, retryAssert bool) string {
+func jumpSsh(t *testing.T, command string, expected string, retryAssert bool, ip string) string {
 	bastionHost := bastionHost(t)
-	webHost := webHost(t)
+	webHost := webHost(t, ip)
 	description := fmt.Sprintf("ssh jump to %q with command %q", webHost.Hostname, command)
 
 	out := retry.DoWithRetry(t, description, maxRetries, sleepBetweenRetries, func() (string, error) {
@@ -236,7 +298,7 @@ func loadKeyPair(t *testing.T) *ssh.KeyPair {
 	}
 }
 
-func netstatService(t *testing.T, service string, port string, expectedCount int) {
+func netstatService(t *testing.T, service string, port string, expectedCount int, ip string) {
 	command := fmt.Sprintf("sudo netstat -tnlp | grep '%s' | grep ':%s' | wc -l", service, port)
-	jumpSsh(t, command, strconv.Itoa(expectedCount), true)
+	jumpSsh(t, command, strconv.Itoa(expectedCount), true,  ip)
 }

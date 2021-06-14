@@ -28,11 +28,11 @@ variable "region" {
 
 /* Availability domain can be 0, 1 or 2 - use the one that has free resources */
 variable "availability_domain" {
-  default = 1
+  default = 2
 }
 
 variable "TestServerShape" {
-  default = "VM.Standard.E3.Flex"
+  default = "VM.Standard2.1"
 }
 
 variable "InstanceImageOCID" {
@@ -43,9 +43,10 @@ variable "InstanceImageOCID" {
   # and search for image with name Linux-7.6-2019, like written below (with different date).
   # TIP: the variable map can be (re-)defined also in env-vars file.
   default = {
-    // Oracle-Linux-7.9-2021.05.12-0
-    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaprt6uk32tylin3owcddyllao3uthmo7vheqepeybvjj6to7xkdgq",
-
+    // Oracle-Linux-7.9
+    eu-frankfurt-1 = "ocid1.image.oc1.eu-frankfurt-1.aaaaaaaaulz7xiht632iidvdm4iezy33fofulmerq2nkllwnkjy335qkswza",
+    //ocid1.image.oc1.eu-frankfurt-1.aaaaaaaavz6p7tyrczcwd5uvq6x2wqkbwcrjjbuohbjomtzv32k5bq24rsha
+    
   }
 }
 
@@ -59,11 +60,11 @@ variable "BastionServerBootStrap" {
 }
 
 variable "WebVMCount" {
-  default = 1
+  default = 4
 }
 
 variable "BastionVMCount" {
-  default = 2
+  default = 1
 }
 
 ####################################################################################################
