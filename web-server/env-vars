@@ -1,0 +1,17 @@
+export TF_VAR_region=eu-frankfurt-1
+export PS1='\u@\h \w [terraform web-server $TF_VAR_region]\$ '
+### Authentication details
+export TF_VAR_tenancy_ocid=ocid1.tenancy.oc1..aaaaaaaah3b24zkkewpfygiw3rekqn3idilrt2qrjzkcdxbu5yhqpet4ox4a
+export TF_VAR_user_ocid=ocid1.user.oc1..aaaaaaaaq623ujht4oif2p6qkmoo5xm4i44eizvvxwlybgri2cqoqukqjela
+export TF_VAR_fingerprint=9a:80:84:d0:dd:92:e7:66:ed:8d:90:84:e5:45:ea:27
+export TF_VAR_private_key_path=/home/vit/Downloads/vitek.skrhak-06-07-08-49.pem
+
+export TF_VAR_availability_domain=1
+export TF_VAR_TestServerShape="VM.Standard2.1"
+
+export TF_VAR_CompartmentOCID=ocid1.compartment.oc1..aaaaaaaaicbtnwruibyhgerp77cep5i6gnn6o6ouz74yyok4dgu2gsjhslga
+
+### Public/private keys used on the instance
+export TF_VAR_ssh_public_key=/home/vit/.ssh/id_rsa.pub
+export TF_VAR_ssh_private_key=/home/vit/.ssh/id_rsa
+
